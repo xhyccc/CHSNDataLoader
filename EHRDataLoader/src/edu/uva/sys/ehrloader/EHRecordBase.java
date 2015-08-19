@@ -93,7 +93,7 @@ public class EHRecordBase {
 		for (String pid : this._database.keySet()) {
 			for (Date dTime : this._database.get(pid).keySet()) {
 				for (String code : this._database.get(pid).get(dTime)) {
-					m[this._patients.indexOf(pid)][this._codes.indexOf(code)]++;
+					m[this._patients.indexOf(pid)][this._codes.indexOf(code)]+=1.0/(double)(this._database.get(pid).keySet().size());
 				}
 			}
 		}
@@ -131,7 +131,7 @@ public class EHRecordBase {
 			for (Date dTime : this._database.get(pid).keySet()) {
 				if (Math.random() >= seed) {
 					for (String code : this._database.get(pid).get(dTime)) {
-						m[this._patients.indexOf(pid)][this._codes.indexOf(code)]++;
+						m[this._patients.indexOf(pid)][this._codes.indexOf(code)]+=1.0/(double)(this._database.get(pid).keySet().size());
 					}
 				}
 			}

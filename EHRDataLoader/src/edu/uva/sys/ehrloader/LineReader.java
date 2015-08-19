@@ -12,7 +12,7 @@ public class LineReader {
 		try {
 			BufferedReader br=new BufferedReader(new FileReader(filepath));
 			String ln=br.readLine();
-			while(ln!=null&&lindex<10000){
+			while(ln!=null&&lindex<100000){
 				if(!ln.toLowerCase().contains("null")){
 					String[] lns=ln.split(",");
 					_base.insertRecord(lns[0], lns[2], lns[3]);

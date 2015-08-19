@@ -7,11 +7,17 @@ import ml.recovery.RobustPCA;
 
 public class PCARecovery implements Recovery{
 
+	private double _lambda;
+	
+	public PCARecovery(double lambda){
+		this._lambda=lambda;
+	}
+	
 	@Override
 	public double[][] recover(double[][] matrix) {
 		// TODO Auto-generated method stub
 		Matrix m=new DenseMatrix(matrix);
-		RobustPCA mc=new RobustPCA(0.5);
+		RobustPCA mc=new RobustPCA(this._lambda);
 		mc.feedData(m);
 		mc.run();
 		double[][] error=mc.GetErrorMatrix().getData();
