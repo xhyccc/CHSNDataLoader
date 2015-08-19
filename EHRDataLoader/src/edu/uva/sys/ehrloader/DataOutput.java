@@ -15,6 +15,8 @@ public class DataOutput {
 			for(String code:codes){
 				ps.print(",code:"+code);
 			}
+			ps.println();
+
 			for(int i=0;i<patients.size();i++){
 				ps.print(i);
 				for(int j=0;j<codes.size();j++){
@@ -30,8 +32,10 @@ public class DataOutput {
 	}
 	
 	public static void main(String[] args){
-		EHRecordBase base=LineReader.load("/Users/bertrandx/Box Sync/Hao Research/MH utilization study/subject1_mh/mh_sample.csv", "cptcode");
+		EHRecordBase base=CPTLineReader.load("/Users/bertrandx/Box Sync/Hao Research/MH utilization study/subject1_mh/mh_sample.csv", "cptcode");
 		double[][] fm=base.getBinaryMatrix();
+		System.out.println("matrix " + fm.length + " x " + fm[0].length);
+
 		saveFile(base,fm, "/Users/bertrandx/Box Sync/Hao Research/MH utilization study/subject1_mh/code_matrix.csv");
 
 	}
