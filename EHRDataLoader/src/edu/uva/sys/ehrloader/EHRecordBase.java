@@ -5,7 +5,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class EHRecordBase {
-	private static SimpleDateFormat dt = new SimpleDateFormat("yyyy-mm-dd hh:mm:ss"); 
+	private static SimpleDateFormat dt = new SimpleDateFormat("yyyy-mm-dd"); 
 
 	private HashMap<String, HashMap<Date, Set<String>>> _database=new HashMap<String, HashMap<Date, Set<String>>>();
 
