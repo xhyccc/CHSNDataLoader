@@ -110,6 +110,7 @@ public class EHRecordBase {
 
 		for (String pid : this._database.keySet()) {
 			for (Date dTime : this._database.get(pid).keySet()) {
+				System.out.println(pid+"\t"+this._database.get(pid).get(dTime).size());
 				for (String code : this._database.get(pid).get(dTime)) {
 					if (m[this._patients.indexOf(pid)][this._codes.indexOf(code)] == 0)
 						m[this._patients.indexOf(pid)][this._codes.indexOf(code)]++;

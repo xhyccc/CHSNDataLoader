@@ -6,20 +6,21 @@ import java.util.Set;
 
 import edu.uva.sys.ehrloader.recovery.*;
 
-public class CPTMain {
+public class ICDMain {
 
 	public static void main(String[] args) {
 
-		EHRecordBase base = CPTLineReader.load(
-				"/Users/bertrandx/Box Sync/Hao Research/MH utilization study/subject1_mh/mh_sample.csv", "cptcode");
+		EHRecordBase base = ICDLineReader.load(
+				"/Users/bertrandx/Box Sync/Hao Research/MH utilization study/subject1_mh_icd/mh_icd.csv", "icdcode");
 		System.out.println("patients: " + base.getPatients().size());
 		System.out.println("codes: " + base.getCodes().size());
 		System.out.println("dates: " + base.getDates().size());
 
 		double[][] fm = base.getBinaryMatrix();
-		double[][] fm2 = base.getBinaryMatrixWithRandomVisitMissing(0.9);
+		double[][] fm2 = base.getBinaryMatrixWithRandomVisitMissing(0.5);
 		HashMap<Integer,Set<Integer>> missingcodes=new HashMap<Integer,Set<Integer>>();
 
+		
 		System.out.println("matrix " + fm.length + " x " + fm[0].length);
 		int sum_miss_codes = 0;
 		for (int i = 0; i < fm.length; i++) {
@@ -38,7 +39,7 @@ public class CPTMain {
 		HashMap<Integer,Set<Integer>> recoverycodes=new HashMap<Integer,Set<Integer>>();
 
 
-		Recovery r = new L1NMFRecovery(2);
+		Recovery r = new NMFRecovery(5);
 	//	Recovery r = new NMFRecovery(5);
 		
 		double[][] fm3 = r.recover(fm2);
@@ -46,7 +47,7 @@ public class CPTMain {
 
 		for (int i = 0; i < fm.length; i++) {
 			for (int j = 0; j < fm[i].length; j++) {
-				if (fm2[i][j]==0 && fm3[i][j] > 0.5) {
+				if (fm2[i][j]==0 && fm3[i][j] > 0.0) {
 					sum_recover_codes++;
 					if(!recoverycodes.containsKey(i))
 						recoverycodes.put(i, new HashSet<Integer>());
