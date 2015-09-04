@@ -16,11 +16,13 @@ public class CPTLineReader {
 		try {
 			BufferedReader br = new BufferedReader(new FileReader(filepath));
 			String ln = br.readLine();
-			while (ln != null && lindex < 100000) {
+			ln = br.readLine();
+			while (ln != null) {
 				if (!ln.toLowerCase().contains("null")) {
 					String[] lns = ln.split(",");
 					if (isNumeric(lns[3]))
-						_base.insertRecord(lns[0], lns[2], lns[3]);
+						_base.insertRecord(lns[0], lns[2], lns[3], Integer.parseInt(lns[4]), 
+								lns[5].toLowerCase().equals("M") ? 1 : 0,Integer.parseInt(lns[0]));
 				}
 				System.out.println("read lines " + (lindex++));
 				ln = br.readLine();

@@ -11,13 +11,13 @@ public class ICDMain {
 	public static void main(String[] args) {
 
 		EHRecordBase base = ICDLineReader.load(
-				"/Users/bertrandx/Box Sync/Hao Research/MH utilization study/subject1_mh_icd/mh_icd.csv", "icdcode");
+				"/Users/bertrandx/Box Sync/CHSN_pattern mining/Jinghe/non-mh_icd.csv", "icdcode");
 		System.out.println("patients: " + base.getPatients().size());
 		System.out.println("codes: " + base.getCodes().size());
 		System.out.println("dates: " + base.getDates().size());
 
 		double[][] fm = base.getBinaryMatrix();
-		double[][] fm2 = base.getBinaryMatrixWithRandomVisitMissing(0.5);
+		double[][] fm2 = base.getBinaryMatrixWithRandomVisitMissing(0.0);
 		HashMap<Integer,Set<Integer>> missingcodes=new HashMap<Integer,Set<Integer>>();
 
 		
@@ -39,7 +39,7 @@ public class ICDMain {
 		HashMap<Integer,Set<Integer>> recoverycodes=new HashMap<Integer,Set<Integer>>();
 
 
-		Recovery r = new NMFRecovery(5);
+		Recovery r = new L1NMFRecovery(5);
 	//	Recovery r = new NMFRecovery(5);
 		
 		double[][] fm3 = r.recover(fm2);

@@ -17,7 +17,7 @@ public class CPTMain {
 		System.out.println("dates: " + base.getDates().size());
 
 		double[][] fm = base.getBinaryMatrix();
-		double[][] fm2 = base.getBinaryMatrixWithRandomVisitMissing(0.9);
+		double[][] fm2 = base.getBinaryMatrixWithRandomVisitMissing(0.5);
 		HashMap<Integer,Set<Integer>> missingcodes=new HashMap<Integer,Set<Integer>>();
 
 		System.out.println("matrix " + fm.length + " x " + fm[0].length);
@@ -46,7 +46,7 @@ public class CPTMain {
 
 		for (int i = 0; i < fm.length; i++) {
 			for (int j = 0; j < fm[i].length; j++) {
-				if (fm2[i][j]==0 && fm3[i][j] > 0.5) {
+				if (fm2[i][j]==0 && fm3[i][j] > 0.9) {
 					sum_recover_codes++;
 					if(!recoverycodes.containsKey(i))
 						recoverycodes.put(i, new HashSet<Integer>());

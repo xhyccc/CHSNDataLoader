@@ -12,9 +12,13 @@ public class EHRecordBase {
 	private List<String> _patients = new ArrayList<String>();
 	private List<String> _codes = new ArrayList<String>();
 	private List<Date> _dates = new ArrayList<Date>();
+	private HashMap<String,Integer> _hospitals=new HashMap<String,Integer>();
+	private HashMap<String,Integer> _ages=new HashMap<String,Integer>();
+	private HashMap<String,Integer> _gender=new HashMap<String,Integer>();
+	private HashMap<String,Integer> _labels=new HashMap<String,Integer>();
 
 	public static HashMap<String, EHRecordBase> _bases = new HashMap<String, EHRecordBase>();
-
+	
 	public EHRecordBase(String name) {
 		EHRecordBase._bases.put(name, this);
 	}
@@ -38,13 +42,17 @@ public class EHRecordBase {
 				}
 			}
 		}
+		this._labels.putAll(_base._labels);
 	}
 
-	public void insertRecord(String pid, String dtime, String code) {
+	public void insertRecord(String pid, String dtime, String code, int age, int gender, int hospital) {
 		try {
 
 			Date dIns = dt.parse(dtime);
 			insertRecord(pid, dIns, code);
+			this._gender.put(pid, gender);
+			this._ages.put(pid, age);
+			this._hospitals.put(pid, hospital);
 
 		} catch (ParseException e) {
 			// TODO Auto-generated catch block
@@ -162,4 +170,13 @@ public class EHRecordBase {
 		return m;
 	}
 
+	public void setLabelsForAllPatients(Integer label){
+		this.getPatients();
+		this._labels.clear();
+		for (String pid : this._database.keySet()) {
+			this._labels.put(pid, label);
+		}
+
+	}
+	
 }
