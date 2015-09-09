@@ -10,14 +10,14 @@ public class CPTLineReader {
 												// '-' and decimal.
 	}
 
-	public static EHRecordBase load(String filepath, String name) {
+	public static EHRecordBase load(String filepath, String name, int lnn) {
 		EHRecordBase _base = EHRecordBase.getBase(name);
 		int lindex = 0;
 		try {
 			BufferedReader br = new BufferedReader(new FileReader(filepath));
 			String ln = br.readLine();
 			ln = br.readLine();
-			while (ln != null) {
+			while (ln != null&&lindex<lnn) {
 				if (!ln.toLowerCase().contains("null")) {
 					String[] lns = ln.split(",");
 					if (isNumeric(lns[3]))

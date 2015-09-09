@@ -12,26 +12,46 @@ public class EHRecordBase {
 	private List<String> _patients = new ArrayList<String>();
 	private List<String> _codes = new ArrayList<String>();
 	private List<Date> _dates = new ArrayList<Date>();
-	private HashMap<String,Integer> _hospitals=new HashMap<String,Integer>();
-	private HashMap<String,Integer> _ages=new HashMap<String,Integer>();
-	private HashMap<String,Integer> _gender=new HashMap<String,Integer>();
-	private HashMap<String,Integer> _labels=new HashMap<String,Integer>();
+	private HashMap<String, Integer> _hospitals = new HashMap<String, Integer>();
+	private HashMap<String, Integer> _ages = new HashMap<String, Integer>();
+	private HashMap<String, Integer> _gender = new HashMap<String, Integer>();
+	private HashMap<String, Integer> _labels = new HashMap<String, Integer>();
+	private String _name;
 
 	public static HashMap<String, EHRecordBase> _bases = new HashMap<String, EHRecordBase>();
-	
+
 	public EHRecordBase(String name) {
 		EHRecordBase._bases.put(name, this);
+		this._name = name;
 	}
 
 	public EHRecordBase(String name, EHRecordBase _base) {
 		EHRecordBase._bases.put(name, this);
 		this.insertRecords(_base);
+		this._name = name;
 	}
 
 	public static EHRecordBase getBase(String name) {
 		if (_bases.containsKey(name))
 			return _bases.get(name);
 		return new EHRecordBase(name);
+	}
+
+	public void removePatientLessNVisit(int visit) {
+		Set<String> toRemove = new HashSet<String>();
+		for (String pid : this._database.keySet()) {
+			if (_database.get(pid).keySet().size() < visit) {
+				toRemove.add(pid);
+			}
+		}
+		this._patients.removeAll(toRemove);
+		for (String pid : toRemove)
+			this._database.remove(pid);
+	}
+
+	public EHRecordBase rebase() {
+		EHRecordBase ebase = new EHRecordBase(this._name + "_rebase", this);
+		return ebase;
 	}
 
 	public void insertRecords(EHRecordBase _base) {
@@ -101,7 +121,7 @@ public class EHRecordBase {
 		for (String pid : this._database.keySet()) {
 			for (Date dTime : this._database.get(pid).keySet()) {
 				for (String code : this._database.get(pid).get(dTime)) {
-					m[this._patients.indexOf(pid)][this._codes.indexOf(code)]+=1.0/(double)(this._database.get(pid).keySet().size());
+					m[this._patients.indexOf(pid)][this._codes.indexOf(code)]++;
 				}
 			}
 		}
@@ -118,7 +138,7 @@ public class EHRecordBase {
 
 		for (String pid : this._database.keySet()) {
 			for (Date dTime : this._database.get(pid).keySet()) {
-				System.out.println(pid+"\t"+this._database.get(pid).get(dTime).size());
+				System.out.println(pid + "\t" + this._database.get(pid).get(dTime).size());
 				for (String code : this._database.get(pid).get(dTime)) {
 					if (m[this._patients.indexOf(pid)][this._codes.indexOf(code)] == 0)
 						m[this._patients.indexOf(pid)][this._codes.indexOf(code)]++;
@@ -140,7 +160,27 @@ public class EHRecordBase {
 			for (Date dTime : this._database.get(pid).keySet()) {
 				if (Math.random() >= seed) {
 					for (String code : this._database.get(pid).get(dTime)) {
-						m[this._patients.indexOf(pid)][this._codes.indexOf(code)]+=1.0/(double)(this._database.get(pid).keySet().size());
+						m[this._patients.indexOf(pid)][this._codes.indexOf(code)]++;
+					}
+				}
+			}
+		}
+
+		return m;
+	}
+
+	public double[][] getFrequencyMatrixWithRandomCodeMissing(double seed) {
+		this.getPatients();
+		this.getDates();
+		this.getCodes();
+
+		double[][] m = new double[this._patients.size()][this._codes.size()];
+
+		for (String pid : this._database.keySet()) {
+			for (Date dTime : this._database.get(pid).keySet()) {
+				for (String code : this._database.get(pid).get(dTime)) {
+					if (Math.random() >= seed) {
+						m[this._patients.indexOf(pid)][this._codes.indexOf(code)]++;
 					}
 				}
 			}
@@ -170,7 +210,28 @@ public class EHRecordBase {
 		return m;
 	}
 
-	public void setLabelsForAllPatients(Integer label){
+	public double[][] getBinaryMatrixWithRandomCodeMissing(double seed) {
+		this.getPatients();
+		this.getDates();
+		this.getCodes();
+
+		double[][] m = new double[this._patients.size()][this._codes.size()];
+
+		for (String pid : this._database.keySet()) {
+			for (Date dTime : this._database.get(pid).keySet()) {
+				for (String code : this._database.get(pid).get(dTime)) {
+					if (Math.random() >= seed) {
+						if (m[this._patients.indexOf(pid)][this._codes.indexOf(code)] == 0)
+							m[this._patients.indexOf(pid)][this._codes.indexOf(code)]++;
+					}
+				}
+			}
+		}
+
+		return m;
+	}
+
+	public void setLabelsForAllPatients(Integer label) {
 		this.getPatients();
 		this._labels.clear();
 		for (String pid : this._database.keySet()) {
@@ -178,5 +239,5 @@ public class EHRecordBase {
 		}
 
 	}
-	
+
 }

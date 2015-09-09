@@ -10,18 +10,19 @@ public class ICDLineReader {
 												// '-' and decimal.
 	}
 
-	public static EHRecordBase load(String filepath, String name) {
+	public static EHRecordBase load(String filepath, String name, int lnn) {
 		EHRecordBase _base = EHRecordBase.getBase(name);
 		int lindex = 0;
 		try {
 			BufferedReader br = new BufferedReader(new FileReader(filepath));
 			String ln = br.readLine();
-			while (ln != null) {
+			ln = br.readLine();
+			while (ln != null&&lindex<lnn) {
 				if (!ln.toLowerCase().contains("null")) {
 					String[] lns = ln.split(",");
 				//	if (isNumeric(lns[3]))
 						_base.insertRecord(lns[1], lns[2], lns[3],Integer.parseInt(lns[4]),
-								lns[5].toLowerCase().equals("M")?1:0,Integer.parseInt(lns[0]));
+								lns[5].toLowerCase().equals("M")?1:0,1);
 				}
 				System.out.println("read lines " + (lindex++));
 				ln = br.readLine();

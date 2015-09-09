@@ -11,7 +11,7 @@ public class CPTMain {
 	public static void main(String[] args) {
 
 		EHRecordBase base = CPTLineReader.load(
-				"/Users/bertrandx/Box Sync/Hao Research/MH utilization study/subject1_mh/mh_sample.csv", "cptcode");
+				"/Users/bertrandx/Box Sync/Hao Research/MH utilization study/subject1_mh/mh_sample.csv", "cptcode",100000);
 		System.out.println("patients: " + base.getPatients().size());
 		System.out.println("codes: " + base.getCodes().size());
 		System.out.println("dates: " + base.getDates().size());
