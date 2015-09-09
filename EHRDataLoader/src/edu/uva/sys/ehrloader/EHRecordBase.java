@@ -240,4 +240,14 @@ public class EHRecordBase {
 
 	}
 
+	public int[] getLabels() {
+		List<String> lls=this.getPatients();
+		int[] labels=new int[lls.size()];
+		int index=0;
+		for(String pid:lls){
+			labels[index++]=this._labels.get(pid);
+		}
+		return labels;
+	}
+	
 }
