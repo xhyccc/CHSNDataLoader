@@ -21,7 +21,7 @@ public class ICDLineReader {
 				if (!ln.toLowerCase().contains("null")) {
 					String[] lns = ln.split(",");
 				//	if (isNumeric(lns[3]))
-						_base.insertRecord(lns[1], lns[2], lns[3],Integer.parseInt(lns[4]),
+						_base.insertRecord(lns[1], lns[2], lns[3].split("\\.")[0],Integer.parseInt(lns[4]),
 								lns[5].toLowerCase().equals("M")?1:0,1);
 				}
 				System.out.println("read lines " + (lindex++));

@@ -5,18 +5,18 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class EHRecordBase {
-	private static SimpleDateFormat dt = new SimpleDateFormat("yyyy-mm-dd");
+	public static SimpleDateFormat dt = new SimpleDateFormat("yyyy-mm-dd");
 
-	private HashMap<String, HashMap<Date, Set<String>>> _database = new HashMap<String, HashMap<Date, Set<String>>>();
+	public HashMap<String, HashMap<Date, Set<String>>> _database = new HashMap<String, HashMap<Date, Set<String>>>();
 
-	private List<String> _patients = new ArrayList<String>();
-	private List<String> _codes = new ArrayList<String>();
-	private List<Date> _dates = new ArrayList<Date>();
-	private HashMap<String, Integer> _hospitals = new HashMap<String, Integer>();
-	private HashMap<String, Integer> _ages = new HashMap<String, Integer>();
-	private HashMap<String, Integer> _gender = new HashMap<String, Integer>();
-	private HashMap<String, Integer> _labels = new HashMap<String, Integer>();
-	private String _name;
+	public List<String> _patients = new ArrayList<String>();
+	public List<String> _codes = new ArrayList<String>();
+	public List<Date> _dates = new ArrayList<Date>();
+	public HashMap<String, Integer> _hospitals = new HashMap<String, Integer>();
+	public HashMap<String, Integer> _ages = new HashMap<String, Integer>();
+	public HashMap<String, Integer> _gender = new HashMap<String, Integer>();
+	public HashMap<String, Integer> _labels = new HashMap<String, Integer>();
+	public String _name;
 
 	public static HashMap<String, EHRecordBase> _bases = new HashMap<String, EHRecordBase>();
 
@@ -63,6 +63,8 @@ public class EHRecordBase {
 			}
 		}
 		this._labels.putAll(_base._labels);
+		this._ages.putAll(_base._ages);
+		this._gender.putAll(_base._gender);
 	}
 
 	public void insertRecord(String pid, String dtime, String code, int age, int gender, int hospital) {
@@ -80,7 +82,7 @@ public class EHRecordBase {
 		}
 	}
 
-	private void insertRecord(String pid, Date dIns, String code) {
+	public void insertRecord(String pid, Date dIns, String code) {
 		if (!_dates.contains(dIns))
 			this._dates.add(dIns);
 		if (!_codes.contains(code))

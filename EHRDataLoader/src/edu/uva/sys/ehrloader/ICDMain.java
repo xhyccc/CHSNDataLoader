@@ -5,8 +5,12 @@ import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
-import edu.uva.libopt.numeric.*;
 
+import edu.uva.hdstats.da.Classifier;
+import edu.uva.hdstats.da.LDA;
+import edu.uva.hdstats.da.PDLassoLDA;
+import edu.uva.libopt.numeric.*;
+import edu.uva.sys.ehrloader.ml.FixedNumberTTSelection;
 import edu.uva.sys.ehrloader.recovery.*;
 
 public class ICDMain {
@@ -14,7 +18,7 @@ public class ICDMain {
 	public static PrintStream ps= null;
 	static {
 		try {
-			ps = new PrintStream("/Users/bertrandx/Box Sync/CHSN_pattern mining/Jinghe/icd-c30-5-recovery-norml12.txt");
+			ps = new PrintStream("/Users/bertrandx/Box Sync/CHSN_pattern mining/Jinghe/accuracy.txt");
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -31,8 +35,11 @@ public class ICDMain {
 		
 		base.removePatientLessNVisit(5);
 		base_2.removePatientLessNVisit(5);
-		
+	
+		base.setLabelsForAllPatients(0);
+		base_2.setLabelsForAllPatients(1);
 		base.insertRecords(base_2);
+	
 		
 		ps.println("patients: " + base.getPatients().size());
 		ps.println("codes: " + base.getCodes().size());
@@ -41,50 +48,119 @@ public class ICDMain {
 		
 		
 		double[][] fm = base.getFrequencyMatrix();
-		double[][] fm2 = base.getFrequencyMatrixWithRandomCodeMissing(0.30);
+	//	double[][] fm2 = base.getFrequencyMatrixWithRandomCodeMissing(0.30);
 		HashMap<Integer,Set<Integer>> missingcodes=new HashMap<Integer,Set<Integer>>();
 
 		
 		System.out.println("matrix " + fm.length + " x " + fm[0].length);
-		int sum_miss_codes = 0;
-		for (int i = 0; i < fm.length; i++) {
-			for (int j = 0; j < fm[i].length; j++) {
-				if (fm2[i][j]==0&&fm[i][j]>0) {
-					sum_miss_codes++;
-					if(!missingcodes.containsKey(i))
-						missingcodes.put(i, new HashSet<Integer>());
-					missingcodes.get(i).add(j);
-				}
-			}
-		}
-		ps.println("code missing: " + sum_miss_codes);
-		ps.println("l1 missing: " + Utils.normalizedErrorL1(fm, fm2, 0));
-		ps.println("l2 missing: " + Utils.normalizedErrorL2(fm, fm2, 0));
+//		int sum_miss_codes = 0;
+//		for (int i = 0; i < fm.length; i++) {
+//			for (int j = 0; j < fm[i].length; j++) {
+//				if (fm2[i][j]==0&&fm[i][j]>0) {
+//					sum_miss_codes++;
+//					if(!missingcodes.containsKey(i))
+//						missingcodes.put(i, new HashSet<Integer>());
+//					missingcodes.get(i).add(j);
+//				}
+//			}
+//		}
+//		ps.println("code missing: " + sum_miss_codes);
+//		ps.println("l1 missing: " + Utils.normalizedErrorL1(fm, fm, 0));
+//		ps.println("l2 missing: " + Utils.normalizedErrorL2(fm, fm, 0));
 
 		// Recovery r=new PCARecovery(0.1);
 //		System.out.println("using PCA 0.1");
 //		dataRecovery(new PCARecovery(0.1), fm, fm2, missingcodes, sum_miss_codes);
-		ps.println("using NMF 5");
-		dataRecovery(new NMFRecovery(5), fm, fm2, missingcodes, sum_miss_codes);
-		ps.println("using L1NMF 5");
-		dataRecovery(new L1NMFRecovery(5), fm, fm2, missingcodes, sum_miss_codes);
+//		ps.println("using NMF 5");
+//		dataRecovery(new NMFRecovery(5), fm, fm2, missingcodes, sum_miss_codes);
+//		ps.println("using L1NMF 5");
+//		dataRecovery(new L1NMFRecovery(5), fm, fm2, missingcodes, sum_miss_codes);
 //		System.out.println("using PCA 0.2");
 //		dataRecovery(new PCARecovery(0.1), fm, fm2, missingcodes, sum_miss_codes);
-		ps.println("using NMF 10");
-		dataRecovery(new NMFRecovery(10), fm, fm2, missingcodes, sum_miss_codes);
-		ps.println("using L1NMF 10");
-		dataRecovery(new L1NMFRecovery(10), fm, fm2, missingcodes, sum_miss_codes);
+//		ps.println("using NMF 10");
+//		dataRecovery(new NMFRecovery(10), fm, fm2, missingcodes, sum_miss_codes);
+//		ps.println("using L1NMF 10");
+//		dataRecovery(new L1NMFRecovery(10), fm, fm2, missingcodes, sum_miss_codes);
 
-		ps.println("using NMF 15");
-		dataRecovery(new NMFRecovery(15), fm, fm2, missingcodes, sum_miss_codes);
-		ps.println("using L1NMF 15");
-		dataRecovery(new L1NMFRecovery(15), fm, fm2, missingcodes, sum_miss_codes);
+//		ps.println("using NMF 15");
+//		dataRecovery(new NMFRecovery(15), fm, fm2, missingcodes, sum_miss_codes);
+//		ps.println("using L1NMF 15");
+//		dataRecovery(new L1NMFRecovery(15), fm, fm2, missingcodes, sum_miss_codes);
 //		System.out.println("using PCA 0.2");
 //		dataRecovery(new PCARecovery(0.1), fm, fm2, missingcodes, sum_miss_codes);
 		ps.println("using NMF 20");
-		dataRecovery(new NMFRecovery(20), fm, fm2, missingcodes, sum_miss_codes);
-		ps.println("using L1NMF 20");
-		dataRecovery(new L1NMFRecovery(20), fm, fm2, missingcodes, sum_miss_codes);
+		double[][] recoveredData=dataRecovery(new NMFRecovery(20), fm, fm, missingcodes, 0);
+		FixedNumberTTSelection s=new FixedNumberTTSelection(fm,base.getLabels(),5000);
+		
+		s.select();
+		LDA lda=new LDA(s.getTrainingSet(),s.getTrainingLabels());
+		PDLassoLDA slda=new PDLassoLDA(s.getTrainingSet(),s.getTrainingLabels());
+		accuracy("LDA",s.getTestingSet(),s.getTestingLabels(),lda);
+		accuracy("sparseLDA",s.getTestingSet(),s.getTestingLabels(),slda);
+		
+		s.select();
+		lda=new LDA(s.getTrainingSet(),s.getTrainingLabels());
+		slda=new PDLassoLDA(s.getTrainingSet(),s.getTrainingLabels());		
+		accuracy("LDA",s.getTestingSet(),s.getTestingLabels(),lda);
+		accuracy("sparseLDA",s.getTestingSet(),s.getTestingLabels(),slda);
+
+		s.select();
+		lda=new LDA(s.getTrainingSet(),s.getTrainingLabels());
+		slda=new PDLassoLDA(s.getTrainingSet(),s.getTrainingLabels());		
+		accuracy("LDA",s.getTestingSet(),s.getTestingLabels(),lda);
+		accuracy("sparseLDA",s.getTestingSet(),s.getTestingLabels(),slda);
+
+		s.select();
+		lda=new LDA(s.getTrainingSet(),s.getTrainingLabels());
+		slda=new PDLassoLDA(s.getTrainingSet(),s.getTrainingLabels());		
+		accuracy("LDA",s.getTestingSet(),s.getTestingLabels(),lda);
+		accuracy("sparseLDA",s.getTestingSet(),s.getTestingLabels(),slda);
+
+		s.select();
+		lda=new LDA(s.getTrainingSet(),s.getTrainingLabels());
+		slda=new PDLassoLDA(s.getTrainingSet(),s.getTrainingLabels());		
+		accuracy("LDA",s.getTestingSet(),s.getTestingLabels(),lda);
+		accuracy("sparseLDA",s.getTestingSet(),s.getTestingLabels(),slda);
+
+		
+		s=new FixedNumberTTSelection(recoveredData,base.getLabels(),5000);
+		
+		s.select();
+		lda=new LDA(s.getTrainingSet(),s.getTrainingLabels());
+		slda=new PDLassoLDA(s.getTrainingSet(),s.getTrainingLabels());
+		accuracy("recoveredLDA",s.getTestingSet(),s.getTestingLabels(),lda);
+		accuracy("Daehr",s.getTestingSet(),s.getTestingLabels(),slda);
+
+		s.select();
+		lda=new LDA(s.getTrainingSet(),s.getTrainingLabels());
+		slda=new PDLassoLDA(s.getTrainingSet(),s.getTrainingLabels());		
+		accuracy("recoveredLDA",s.getTestingSet(),s.getTestingLabels(),lda);
+		accuracy("Daehr",s.getTestingSet(),s.getTestingLabels(),slda);
+
+		s.select();
+		lda=new LDA(s.getTrainingSet(),s.getTrainingLabels());
+		slda=new PDLassoLDA(s.getTrainingSet(),s.getTrainingLabels());		
+		accuracy("recoveredLDA",s.getTestingSet(),s.getTestingLabels(),lda);
+		accuracy("Daehr",s.getTestingSet(),s.getTestingLabels(),slda);
+
+		s.select();
+		lda=new LDA(s.getTrainingSet(),s.getTrainingLabels());
+		slda=new PDLassoLDA(s.getTrainingSet(),s.getTrainingLabels());		
+		accuracy("recoveredLDA",s.getTestingSet(),s.getTestingLabels(),lda);
+		accuracy("Daehr",s.getTestingSet(),s.getTestingLabels(),slda);
+
+		s.select();
+		lda=new LDA(s.getTrainingSet(),s.getTrainingLabels());
+		slda=new PDLassoLDA(s.getTrainingSet(),s.getTrainingLabels());
+		accuracy("recoveredLDA",s.getTestingSet(),s.getTestingLabels(),lda);
+		accuracy("Daehr",s.getTestingSet(),s.getTestingLabels(),slda);
+
+		
+		
+		
+		
+//		ps.println("using L1NMF 20");
+//		dataRecovery(new L1NMFRecovery(20), fm, fm2, missingcodes, sum_miss_codes);
 
 		
 //		ps.println("using PCA 0.5");
@@ -95,49 +171,75 @@ public class ICDMain {
 
 	}
 
-	private static void dataRecovery(Recovery r,double[][] fm, double[][] fm2, HashMap<Integer, Set<Integer>> missingcodes,
+	
+	private static void accuracy(String name, double[][] data, int[] labels, Classifier<double[]> classifier){
+	//	int[] plabels=new int[labels.length];
+		System.out.println("accuracy statistics");
+		int tp=0,fp=0,tn=0,fn=0;
+		for(int i=0;i<labels.length;i++){
+			int pl=classifier.predict(data[i]);
+			if(pl==1&&labels[i]==1){
+				tp++;
+			}else if(pl==0&&labels[i]==0){
+				tn++;
+			}else if(pl==1&&labels[i]==0){
+				fp++;
+			}else{
+				fn++;
+			}
+			
+		}
+		ps.println(name+"\t"+tp+"\t"+tn+"\t"+fp+"\t"+fn);
+
+	}
+	
+		
+	private static double[][] dataRecovery(Recovery r,double[][] fm, double[][] fm2, HashMap<Integer, Set<Integer>> missingcodes,
 			int sum_miss_codes) {
 	//	Recovery r = new NMFRecovery(5);
 		
 		double[][] fm3 = r.recover(fm2);
-		int sum_recover_codes = 0;
+//		int sum_recover_codes = 0;
 		
-		ps.println("original matrix " + fm.length + " x " + fm[0].length);
-		ps.println("missing matrix " + fm2.length + " x " + fm2[0].length);
-		ps.println("recovered matrix " + fm3.length + " x " + fm3[0].length);
-
-	    ps.print("threshold,");
-		ps.print("missing,");
-		ps.print("recover," );
-		ps.print("intersect,");
-		ps.print("f1 score,");
-		ps.print("precision score,");
-		ps.print("recall score,");
-		ps.print("normalized l1 error,");
-		ps.println("normalized l2 error");
-
-
+//		ps.println("original matrix " + fm.length + " x " + fm[0].length);
+//		ps.println("missing matrix " + fm2.length + " x " + fm2[0].length);
+//		ps.println("recovered matrix " + fm3.length + " x " + fm3[0].length);
+//
+//	    ps.print("threshold,");
+//		ps.print("missing,");
+//		ps.print("recover," );
+//		ps.print("intersect,");
+//		ps.print("f1 score,");
+//		ps.print("precision score,");
+//		ps.print("recall score,");
+//		ps.print("normalized l1 error,");
+//		ps.println("normalized l2 error");
+//
+//
+//		
+//	//	plotAccuracy(fm, fm2, missingcodes, sum_miss_codes, fm3, sum_recover_codes,0.0);
+//		plotAccuracy(fm, fm2, missingcodes, sum_miss_codes, fm3, sum_recover_codes,0.1);
+//		plotAccuracy(fm, fm2, missingcodes, sum_miss_codes, fm3, sum_recover_codes,0.2);
+//		plotAccuracy(fm, fm2, missingcodes, sum_miss_codes, fm3, sum_recover_codes,0.3);
+//		plotAccuracy(fm, fm2, missingcodes, sum_miss_codes, fm3, sum_recover_codes,0.4);
+//		plotAccuracy(fm, fm2, missingcodes, sum_miss_codes, fm3, sum_recover_codes,0.5);
+//		plotAccuracy(fm, fm2, missingcodes, sum_miss_codes, fm3, sum_recover_codes,0.6);
+//		plotAccuracy(fm, fm2, missingcodes, sum_miss_codes, fm3, sum_recover_codes,0.7);
+//		plotAccuracy(fm, fm2, missingcodes, sum_miss_codes, fm3, sum_recover_codes,0.8);
+//		plotAccuracy(fm, fm2, missingcodes, sum_miss_codes, fm3, sum_recover_codes,0.9);
+//		plotAccuracy(fm, fm2, missingcodes, sum_miss_codes, fm3, sum_recover_codes,1.0);
+//		plotAccuracy(fm, fm2, missingcodes, sum_miss_codes, fm3, sum_recover_codes,1.1);
+//		plotAccuracy(fm, fm2, missingcodes, sum_miss_codes, fm3, sum_recover_codes,1.2);
+//		plotAccuracy(fm, fm2, missingcodes, sum_miss_codes, fm3, sum_recover_codes,1.3);
+//		plotAccuracy(fm, fm2, missingcodes, sum_miss_codes, fm3, sum_recover_codes,1.4);
+//		plotAccuracy(fm, fm2, missingcodes, sum_miss_codes, fm3, sum_recover_codes,1.5);
+//		plotAccuracy(fm, fm2, missingcodes, sum_miss_codes, fm3, sum_recover_codes,1.6);
+//		plotAccuracy(fm, fm2, missingcodes, sum_miss_codes, fm3, sum_recover_codes,1.7);
+//		plotAccuracy(fm, fm2, missingcodes, sum_miss_codes, fm3, sum_recover_codes,1.8);
+//		plotAccuracy(fm, fm2, missingcodes, sum_miss_codes, fm3, sum_recover_codes,1.9);
 		
-		plotAccuracy(fm, fm2, missingcodes, sum_miss_codes, fm3, sum_recover_codes,0.0);
-		plotAccuracy(fm, fm2, missingcodes, sum_miss_codes, fm3, sum_recover_codes,0.1);
-		plotAccuracy(fm, fm2, missingcodes, sum_miss_codes, fm3, sum_recover_codes,0.2);
-		plotAccuracy(fm, fm2, missingcodes, sum_miss_codes, fm3, sum_recover_codes,0.3);
-		plotAccuracy(fm, fm2, missingcodes, sum_miss_codes, fm3, sum_recover_codes,0.4);
-		plotAccuracy(fm, fm2, missingcodes, sum_miss_codes, fm3, sum_recover_codes,0.5);
-		plotAccuracy(fm, fm2, missingcodes, sum_miss_codes, fm3, sum_recover_codes,0.6);
-		plotAccuracy(fm, fm2, missingcodes, sum_miss_codes, fm3, sum_recover_codes,0.7);
-		plotAccuracy(fm, fm2, missingcodes, sum_miss_codes, fm3, sum_recover_codes,0.8);
-		plotAccuracy(fm, fm2, missingcodes, sum_miss_codes, fm3, sum_recover_codes,0.9);
-		plotAccuracy(fm, fm2, missingcodes, sum_miss_codes, fm3, sum_recover_codes,1.0);
-		plotAccuracy(fm, fm2, missingcodes, sum_miss_codes, fm3, sum_recover_codes,1.1);
-		plotAccuracy(fm, fm2, missingcodes, sum_miss_codes, fm3, sum_recover_codes,1.2);
-		plotAccuracy(fm, fm2, missingcodes, sum_miss_codes, fm3, sum_recover_codes,1.3);
-		plotAccuracy(fm, fm2, missingcodes, sum_miss_codes, fm3, sum_recover_codes,1.4);
-		plotAccuracy(fm, fm2, missingcodes, sum_miss_codes, fm3, sum_recover_codes,1.5);
-		plotAccuracy(fm, fm2, missingcodes, sum_miss_codes, fm3, sum_recover_codes,1.6);
-		plotAccuracy(fm, fm2, missingcodes, sum_miss_codes, fm3, sum_recover_codes,1.7);
-		plotAccuracy(fm, fm2, missingcodes, sum_miss_codes, fm3, sum_recover_codes,1.8);
-		plotAccuracy(fm, fm2, missingcodes, sum_miss_codes, fm3, sum_recover_codes,1.9);
+		RecoveryUtil.maxMerge(fm3, fm);
+		return fm3;
 	}
 
 	private static void plotAccuracy(double[][] fm, double[][] fm2, HashMap<Integer, Set<Integer>> missingcodes,
