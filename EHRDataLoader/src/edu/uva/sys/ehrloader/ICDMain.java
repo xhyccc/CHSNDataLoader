@@ -98,29 +98,29 @@ public class ICDMain {
 		accuracy("LDA",s.getTestingSet(),s.getTestingLabels(),lda);
 		accuracy("sparseLDA",s.getTestingSet(),s.getTestingLabels(),slda);
 		
-		s.select();
-		lda=new LDA(s.getTrainingSet(),s.getTrainingLabels());
-		slda=new PDLassoLDA(s.getTrainingSet(),s.getTrainingLabels());		
-		accuracy("LDA",s.getTestingSet(),s.getTestingLabels(),lda);
-		accuracy("sparseLDA",s.getTestingSet(),s.getTestingLabels(),slda);
-
-		s.select();
-		lda=new LDA(s.getTrainingSet(),s.getTrainingLabels());
-		slda=new PDLassoLDA(s.getTrainingSet(),s.getTrainingLabels());		
-		accuracy("LDA",s.getTestingSet(),s.getTestingLabels(),lda);
-		accuracy("sparseLDA",s.getTestingSet(),s.getTestingLabels(),slda);
-
-		s.select();
-		lda=new LDA(s.getTrainingSet(),s.getTrainingLabels());
-		slda=new PDLassoLDA(s.getTrainingSet(),s.getTrainingLabels());		
-		accuracy("LDA",s.getTestingSet(),s.getTestingLabels(),lda);
-		accuracy("sparseLDA",s.getTestingSet(),s.getTestingLabels(),slda);
-
-		s.select();
-		lda=new LDA(s.getTrainingSet(),s.getTrainingLabels());
-		slda=new PDLassoLDA(s.getTrainingSet(),s.getTrainingLabels());		
-		accuracy("LDA",s.getTestingSet(),s.getTestingLabels(),lda);
-		accuracy("sparseLDA",s.getTestingSet(),s.getTestingLabels(),slda);
+//		s.select();
+//		lda=new LDA(s.getTrainingSet(),s.getTrainingLabels());
+//		slda=new PDLassoLDA(s.getTrainingSet(),s.getTrainingLabels());		
+//		accuracy("LDA",s.getTestingSet(),s.getTestingLabels(),lda);
+//		accuracy("sparseLDA",s.getTestingSet(),s.getTestingLabels(),slda);
+//
+//		s.select();
+//		lda=new LDA(s.getTrainingSet(),s.getTrainingLabels());
+//		slda=new PDLassoLDA(s.getTrainingSet(),s.getTrainingLabels());		
+//		accuracy("LDA",s.getTestingSet(),s.getTestingLabels(),lda);
+//		accuracy("sparseLDA",s.getTestingSet(),s.getTestingLabels(),slda);
+//
+//		s.select();
+//		lda=new LDA(s.getTrainingSet(),s.getTrainingLabels());
+//		slda=new PDLassoLDA(s.getTrainingSet(),s.getTrainingLabels());		
+//		accuracy("LDA",s.getTestingSet(),s.getTestingLabels(),lda);
+//		accuracy("sparseLDA",s.getTestingSet(),s.getTestingLabels(),slda);
+//
+//		s.select();
+//		lda=new LDA(s.getTrainingSet(),s.getTrainingLabels());
+//		slda=new PDLassoLDA(s.getTrainingSet(),s.getTrainingLabels());		
+//		accuracy("LDA",s.getTestingSet(),s.getTestingLabels(),lda);
+//		accuracy("sparseLDA",s.getTestingSet(),s.getTestingLabels(),slda);
 
 		
 		s=new FixedNumberTTSelection(recoveredData,base.getLabels(),5000);
@@ -131,29 +131,29 @@ public class ICDMain {
 		accuracy("recoveredLDA",s.getTestingSet(),s.getTestingLabels(),lda);
 		accuracy("Daehr",s.getTestingSet(),s.getTestingLabels(),slda);
 
-		s.select();
-		lda=new LDA(s.getTrainingSet(),s.getTrainingLabels());
-		slda=new PDLassoLDA(s.getTrainingSet(),s.getTrainingLabels());		
-		accuracy("recoveredLDA",s.getTestingSet(),s.getTestingLabels(),lda);
-		accuracy("Daehr",s.getTestingSet(),s.getTestingLabels(),slda);
-
-		s.select();
-		lda=new LDA(s.getTrainingSet(),s.getTrainingLabels());
-		slda=new PDLassoLDA(s.getTrainingSet(),s.getTrainingLabels());		
-		accuracy("recoveredLDA",s.getTestingSet(),s.getTestingLabels(),lda);
-		accuracy("Daehr",s.getTestingSet(),s.getTestingLabels(),slda);
-
-		s.select();
-		lda=new LDA(s.getTrainingSet(),s.getTrainingLabels());
-		slda=new PDLassoLDA(s.getTrainingSet(),s.getTrainingLabels());		
-		accuracy("recoveredLDA",s.getTestingSet(),s.getTestingLabels(),lda);
-		accuracy("Daehr",s.getTestingSet(),s.getTestingLabels(),slda);
-
-		s.select();
-		lda=new LDA(s.getTrainingSet(),s.getTrainingLabels());
-		slda=new PDLassoLDA(s.getTrainingSet(),s.getTrainingLabels());
-		accuracy("recoveredLDA",s.getTestingSet(),s.getTestingLabels(),lda);
-		accuracy("Daehr",s.getTestingSet(),s.getTestingLabels(),slda);
+//		s.select();
+//		lda=new LDA(s.getTrainingSet(),s.getTrainingLabels());
+//		slda=new PDLassoLDA(s.getTrainingSet(),s.getTrainingLabels());		
+//		accuracy("recoveredLDA",s.getTestingSet(),s.getTestingLabels(),lda);
+//		accuracy("Daehr",s.getTestingSet(),s.getTestingLabels(),slda);
+//
+//		s.select();
+//		lda=new LDA(s.getTrainingSet(),s.getTrainingLabels());
+//		slda=new PDLassoLDA(s.getTrainingSet(),s.getTrainingLabels());		
+//		accuracy("recoveredLDA",s.getTestingSet(),s.getTestingLabels(),lda);
+//		accuracy("Daehr",s.getTestingSet(),s.getTestingLabels(),slda);
+//
+//		s.select();
+//		lda=new LDA(s.getTrainingSet(),s.getTrainingLabels());
+//		slda=new PDLassoLDA(s.getTrainingSet(),s.getTrainingLabels());		
+//		accuracy("recoveredLDA",s.getTestingSet(),s.getTestingLabels(),lda);
+//		accuracy("Daehr",s.getTestingSet(),s.getTestingLabels(),slda);
+//
+//		s.select();
+//		lda=new LDA(s.getTrainingSet(),s.getTrainingLabels());
+//		slda=new PDLassoLDA(s.getTrainingSet(),s.getTrainingLabels());
+//		accuracy("recoveredLDA",s.getTestingSet(),s.getTestingLabels(),lda);
+//		accuracy("Daehr",s.getTestingSet(),s.getTestingLabels(),slda);
 
 		
 		
