@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
+import edu.uva.hdstats.Estimator;
 import edu.uva.hdstats.da.Classifier;
 import edu.uva.hdstats.da.LDA;
 import edu.uva.hdstats.da.PDLassoLDA;
@@ -13,23 +14,28 @@ import edu.uva.libopt.numeric.*;
 import edu.uva.sys.ehrloader.ml.FixedNumberTTSelection;
 import edu.uva.sys.ehrloader.recovery.*;
 
-public class ICDMain {
+public class ICDMainLDA {
 
 	public static PrintStream ps= null;
+	public static int t_size=2000;
+
 	static {
 		try {
-			ps = new PrintStream("/Users/bertrandx/Box Sync/CHSN_pattern mining/Jinghe/accuracy.txt");
+			ps = new PrintStream("/Users/bertrandx/Box Sync/CHSN_pattern mining/Jinghe/accuracy-LDA"+t_size+".txt");
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
 	public static void main(String[] args) {
+		
+		EHRRecordMap map = new EHRRecordMap(
+				"/Users/bertrandx/Box Sync/CHSN_pattern mining/Jinghe/mapping.txt");
 
-		EHRecordBase base = ICDLineReader.load(
+		EHRecordBase base = ICDLineReader.load(map,
 				"/Users/bertrandx/Box Sync/CHSN_pattern mining/Jinghe/non-mh_icd.csv", "x_icdcode",300000);
 
-		EHRecordBase base_2 = ICDLineReader.load(
+		EHRecordBase base_2 = ICDLineReader.load(map,
 				"/Users/bertrandx/Box Sync/CHSN_pattern mining/Jinghe/icd_MD.csv", "y_icdcode",300000);
 
 		
@@ -48,125 +54,78 @@ public class ICDMain {
 		
 		
 		double[][] fm = base.getFrequencyMatrix();
-	//	double[][] fm2 = base.getFrequencyMatrixWithRandomCodeMissing(0.30);
 		HashMap<Integer,Set<Integer>> missingcodes=new HashMap<Integer,Set<Integer>>();
 
 		
 		System.out.println("matrix " + fm.length + " x " + fm[0].length);
-//		int sum_miss_codes = 0;
-//		for (int i = 0; i < fm.length; i++) {
-//			for (int j = 0; j < fm[i].length; j++) {
-//				if (fm2[i][j]==0&&fm[i][j]>0) {
-//					sum_miss_codes++;
-//					if(!missingcodes.containsKey(i))
-//						missingcodes.put(i, new HashSet<Integer>());
-//					missingcodes.get(i).add(j);
-//				}
-//			}
-//		}
-//		ps.println("code missing: " + sum_miss_codes);
-//		ps.println("l1 missing: " + Utils.normalizedErrorL1(fm, fm, 0));
-//		ps.println("l2 missing: " + Utils.normalizedErrorL2(fm, fm, 0));
-
-		// Recovery r=new PCARecovery(0.1);
-//		System.out.println("using PCA 0.1");
-//		dataRecovery(new PCARecovery(0.1), fm, fm2, missingcodes, sum_miss_codes);
-//		ps.println("using NMF 5");
-//		dataRecovery(new NMFRecovery(5), fm, fm2, missingcodes, sum_miss_codes);
-//		ps.println("using L1NMF 5");
-//		dataRecovery(new L1NMFRecovery(5), fm, fm2, missingcodes, sum_miss_codes);
-//		System.out.println("using PCA 0.2");
-//		dataRecovery(new PCARecovery(0.1), fm, fm2, missingcodes, sum_miss_codes);
-//		ps.println("using NMF 10");
-//		dataRecovery(new NMFRecovery(10), fm, fm2, missingcodes, sum_miss_codes);
-//		ps.println("using L1NMF 10");
-//		dataRecovery(new L1NMFRecovery(10), fm, fm2, missingcodes, sum_miss_codes);
-
-//		ps.println("using NMF 15");
-//		dataRecovery(new NMFRecovery(15), fm, fm2, missingcodes, sum_miss_codes);
-//		ps.println("using L1NMF 15");
-//		dataRecovery(new L1NMFRecovery(15), fm, fm2, missingcodes, sum_miss_codes);
-//		System.out.println("using PCA 0.2");
-//		dataRecovery(new PCARecovery(0.1), fm, fm2, missingcodes, sum_miss_codes);
 		ps.println("using NMF 20");
 		double[][] recoveredData=dataRecovery(new NMFRecovery(20), fm, fm, missingcodes, 0);
-		FixedNumberTTSelection s=new FixedNumberTTSelection(fm,base.getLabels(),5000);
 		
+		
+		FixedNumberTTSelection s=new FixedNumberTTSelection(fm,base.getLabels(),5000);
 		s.select();
+		FixedNumberTTSelection ss=new FixedNumberTTSelection(recoveredData,base.getLabels(),5000);
+		ss.select(s.trainIndex);
+
 		LDA lda=new LDA(s.getTrainingSet(),s.getTrainingLabels());
 		PDLassoLDA slda=new PDLassoLDA(s.getTrainingSet(),s.getTrainingLabels());
+		lda=new LDA(ss.getTrainingSet(),ss.getTrainingLabels());
+		slda=new PDLassoLDA(ss.getTrainingSet(),ss.getTrainingLabels());
 		accuracy("LDA",s.getTestingSet(),s.getTestingLabels(),lda);
-		accuracy("sparseLDA",s.getTestingSet(),s.getTestingLabels(),slda);
+		accuracy("recoveredLDA",ss.getTestingSet(),ss.getTestingLabels(),lda);
+		accuracy("sparseLDA-"+Estimator.lambda,s.getTestingSet(),s.getTestingLabels(),slda);
+		accuracy("Daehr-"+Estimator.lambda,ss.getTestingSet(),ss.getTestingLabels(),slda);
 		
-//		s.select();
-//		lda=new LDA(s.getTrainingSet(),s.getTrainingLabels());
-//		slda=new PDLassoLDA(s.getTrainingSet(),s.getTrainingLabels());		
-//		accuracy("LDA",s.getTestingSet(),s.getTestingLabels(),lda);
-//		accuracy("sparseLDA",s.getTestingSet(),s.getTestingLabels(),slda);
-//
-//		s.select();
-//		lda=new LDA(s.getTrainingSet(),s.getTrainingLabels());
-//		slda=new PDLassoLDA(s.getTrainingSet(),s.getTrainingLabels());		
-//		accuracy("LDA",s.getTestingSet(),s.getTestingLabels(),lda);
-//		accuracy("sparseLDA",s.getTestingSet(),s.getTestingLabels(),slda);
-//
-//		s.select();
-//		lda=new LDA(s.getTrainingSet(),s.getTrainingLabels());
-//		slda=new PDLassoLDA(s.getTrainingSet(),s.getTrainingLabels());		
-//		accuracy("LDA",s.getTestingSet(),s.getTestingLabels(),lda);
-//		accuracy("sparseLDA",s.getTestingSet(),s.getTestingLabels(),slda);
-//
-//		s.select();
-//		lda=new LDA(s.getTrainingSet(),s.getTrainingLabels());
-//		slda=new PDLassoLDA(s.getTrainingSet(),s.getTrainingLabels());		
-//		accuracy("LDA",s.getTestingSet(),s.getTestingLabels(),lda);
-//		accuracy("sparseLDA",s.getTestingSet(),s.getTestingLabels(),slda);
+		
+		Estimator.lambda*=0.1;
 
-		
-		s=new FixedNumberTTSelection(recoveredData,base.getLabels(),5000);
-		
-		s.select();
-		lda=new LDA(s.getTrainingSet(),s.getTrainingLabels());
 		slda=new PDLassoLDA(s.getTrainingSet(),s.getTrainingLabels());
-		accuracy("recoveredLDA",s.getTestingSet(),s.getTestingLabels(),lda);
-		accuracy("Daehr",s.getTestingSet(),s.getTestingLabels(),slda);
+		accuracy("sparseLDA-"+Estimator.lambda,s.getTestingSet(),s.getTestingLabels(),slda);
+		
+		slda=new PDLassoLDA(ss.getTrainingSet(),ss.getTrainingLabels());
+		accuracy("Daehr-"+Estimator.lambda,ss.getTestingSet(),ss.getTestingLabels(),slda);
 
-//		s.select();
-//		lda=new LDA(s.getTrainingSet(),s.getTrainingLabels());
-//		slda=new PDLassoLDA(s.getTrainingSet(),s.getTrainingLabels());		
-//		accuracy("recoveredLDA",s.getTestingSet(),s.getTestingLabels(),lda);
-//		accuracy("Daehr",s.getTestingSet(),s.getTestingLabels(),slda);
-//
-//		s.select();
-//		lda=new LDA(s.getTrainingSet(),s.getTrainingLabels());
-//		slda=new PDLassoLDA(s.getTrainingSet(),s.getTrainingLabels());		
-//		accuracy("recoveredLDA",s.getTestingSet(),s.getTestingLabels(),lda);
-//		accuracy("Daehr",s.getTestingSet(),s.getTestingLabels(),slda);
-//
-//		s.select();
-//		lda=new LDA(s.getTrainingSet(),s.getTrainingLabels());
-//		slda=new PDLassoLDA(s.getTrainingSet(),s.getTrainingLabels());		
-//		accuracy("recoveredLDA",s.getTestingSet(),s.getTestingLabels(),lda);
-//		accuracy("Daehr",s.getTestingSet(),s.getTestingLabels(),slda);
-//
-//		s.select();
-//		lda=new LDA(s.getTrainingSet(),s.getTrainingLabels());
-//		slda=new PDLassoLDA(s.getTrainingSet(),s.getTrainingLabels());
-//		accuracy("recoveredLDA",s.getTestingSet(),s.getTestingLabels(),lda);
-//		accuracy("Daehr",s.getTestingSet(),s.getTestingLabels(),slda);
+		Estimator.lambda*=0.1;
 
+		slda=new PDLassoLDA(s.getTrainingSet(),s.getTrainingLabels());
+		accuracy("sparseLDA-"+Estimator.lambda,s.getTestingSet(),s.getTestingLabels(),slda);
 		
-		
-		
-		
-//		ps.println("using L1NMF 20");
-//		dataRecovery(new L1NMFRecovery(20), fm, fm2, missingcodes, sum_miss_codes);
+		slda=new PDLassoLDA(ss.getTrainingSet(),ss.getTrainingLabels());
+		accuracy("Daehr-"+Estimator.lambda,ss.getTestingSet(),ss.getTestingLabels(),slda);
 
+		Estimator.lambda*=0.1;
+
+		slda=new PDLassoLDA(s.getTrainingSet(),s.getTrainingLabels());
+		accuracy("sparseLDA-"+Estimator.lambda,s.getTestingSet(),s.getTestingLabels(),slda);
 		
-//		ps.println("using PCA 0.5");
-//		dataRecovery(new PCARecovery(0.5), fm, fm2, missingcodes, sum_miss_codes);
-//		ps.println("using PCA 1.0");
-//		dataRecovery(new PCARecovery(1.0), fm, fm2, missingcodes, sum_miss_codes);
+		slda=new PDLassoLDA(ss.getTrainingSet(),ss.getTrainingLabels());
+		accuracy("Daehr-"+Estimator.lambda,ss.getTestingSet(),ss.getTestingLabels(),slda);
+
+		Estimator.lambda*=0.1;
+
+		slda=new PDLassoLDA(s.getTrainingSet(),s.getTrainingLabels());
+		accuracy("sparseLDA-"+Estimator.lambda,s.getTestingSet(),s.getTestingLabels(),slda);
+		
+		slda=new PDLassoLDA(ss.getTrainingSet(),ss.getTrainingLabels());
+		accuracy("Daehr-"+Estimator.lambda,ss.getTestingSet(),ss.getTestingLabels(),slda);
+
+		Estimator.lambda*=0.1;
+
+		slda=new PDLassoLDA(s.getTrainingSet(),s.getTrainingLabels());
+		accuracy("sparseLDA-"+Estimator.lambda,s.getTestingSet(),s.getTestingLabels(),slda);
+		
+		slda=new PDLassoLDA(ss.getTrainingSet(),ss.getTrainingLabels());
+		accuracy("Daehr-"+Estimator.lambda,ss.getTestingSet(),ss.getTestingLabels(),slda);
+
+		Estimator.lambda*=0.1;
+
+		slda=new PDLassoLDA(s.getTrainingSet(),s.getTrainingLabels());
+		accuracy("sparseLDA-"+Estimator.lambda,s.getTestingSet(),s.getTestingLabels(),slda);
+		
+		slda=new PDLassoLDA(ss.getTrainingSet(),ss.getTrainingLabels());
+		accuracy("Daehr-"+Estimator.lambda,ss.getTestingSet(),ss.getTestingLabels(),slda);
+		
+
 
 
 	}

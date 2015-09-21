@@ -5,6 +5,8 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class EHRecordBase {
+	public static int missingLines=0;
+	
 	public static SimpleDateFormat dt = new SimpleDateFormat("yyyy-mm-dd");
 
 	public HashMap<String, HashMap<Date, Set<String>>> _database = new HashMap<String, HashMap<Date, Set<String>>>();
@@ -36,6 +38,28 @@ public class EHRecordBase {
 			return _bases.get(name);
 		return new EHRecordBase(name);
 	}
+	
+	public void removeVisitsAfter(Set<String> codes) {
+		for(String patient:_patients){
+			HashMap<Date,Set<String>> ap=_database.get(patient);
+			List<Date> ds=new ArrayList<Date>(ap.keySet());
+			Collections.sort(ds);
+			boolean remove=false;
+			Set<Date> toRemove=new HashSet<Date>();
+			for(Date d:ds){
+				for(String c:ap.get(d)){
+					if(codes.contains(c))
+						remove=true;
+				}
+				if(remove)
+					toRemove.add(d);
+			}
+			for(Date d:toRemove)
+				ap.remove(d);
+		}
+		
+	}
+
 
 	public void removePatientLessNVisit(int visit) {
 		Set<String> toRemove = new HashSet<String>();
@@ -65,6 +89,7 @@ public class EHRecordBase {
 		this._labels.putAll(_base._labels);
 		this._ages.putAll(_base._ages);
 		this._gender.putAll(_base._gender);
+		this.missingLines=_base.missingLines;
 	}
 
 	public void insertRecord(String pid, String dtime, String code, int age, int gender, int hospital) {

@@ -10,19 +10,24 @@ public class ICDLineReader {
 												// '-' and decimal.
 	}
 
-	public static EHRecordBase load(String filepath, String name, int lnn) {
+	public static EHRecordBase load(EHRRecordMap map, String filepath, String name, int lnn) {
 		EHRecordBase _base = EHRecordBase.getBase(name);
 		int lindex = 0;
 		try {
 			BufferedReader br = new BufferedReader(new FileReader(filepath));
 			String ln = br.readLine();
 			ln = br.readLine();
-			while (ln != null&&lindex<lnn) {
+			while (ln != null && lindex < lnn) {
 				if (!ln.toLowerCase().contains("null")) {
 					String[] lns = ln.split(",");
-				//	if (isNumeric(lns[3]))
-						_base.insertRecord(lns[1], lns[2], lns[3].split("\\.")[0],Integer.parseInt(lns[4]),
-								lns[5].toLowerCase().equals("M")?1:0,1);
+					// if (isNumeric(lns[3]))
+					String code = lns[3].replaceAll("\\.", "");
+					if (map.codeMap.containsKey(code)) {
+						_base.insertRecord(lns[1], lns[2], map.codeMap.get(code), Integer.parseInt(lns[4]),
+								lns[5].toLowerCase().equals("M") ? 1 : 0, 1);
+					}else{
+						_base.missingLines++;
+					}
 				}
 				System.out.println("read lines " + (lindex++));
 				ln = br.readLine();
@@ -37,4 +42,3 @@ public class ICDLineReader {
 	}
 
 }
-

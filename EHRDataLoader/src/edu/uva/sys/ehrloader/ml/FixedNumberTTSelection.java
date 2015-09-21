@@ -11,6 +11,7 @@ public class FixedNumberTTSelection implements TTSelection{
 	private int _t_size;
 	private double[][] _data;
 	private int[] _labels;
+	public Set<Integer> trainIndex;
 	
 	public FixedNumberTTSelection(double[][] data, int[] labels, int t_size){
 		this._t_size=t_size;
@@ -23,7 +24,7 @@ public class FixedNumberTTSelection implements TTSelection{
 	}
 	
 	public void select(){
-		Set<Integer> trainIndex=new HashSet<Integer>();
+		this.trainIndex=new HashSet<Integer>();
 	//	int t_index=0;
 		while(trainIndex.size()<2*_t_size){
 			for(int i=0;i<_data.length&&trainIndex.size()<2*_t_size;i++){
@@ -40,6 +41,25 @@ public class FixedNumberTTSelection implements TTSelection{
 			}
 		}
 	}
+	
+	public void select(Set<Integer> si){
+		this.trainIndex=new HashSet<Integer>(si);
+
+		int t_index=0;
+		for(int i=0;i<_data.length;i++){
+			if(trainIndex.contains(i)){
+				fromDataToTraining(i,t_index++);
+			}
+		}
+		t_index=0;
+		for(int i=0;i<_data.length;i++){
+			if(!trainIndex.contains(i)){
+				fromDataToTesting(i,t_index++);
+			}
+		}
+	}
+	
+	
 	private void fromDataToTraining(int i, int j){
 		for(int k=0;k<_data[0].length;k++){
 			this.trainingSet[j][k]=this._data[i][k];
