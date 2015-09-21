@@ -41,6 +41,8 @@ public class ICDMainFLD {
 		EHRecordBase base_2 = ICDLineReader.load(map, "/Users/bertrandx/Box Sync/CHSN_pattern mining/Jinghe/icd_MD.csv",
 				"y_icdcode", 300000);
 
+		base_2.removeVisitsAfter(MHCode.codes);
+		
 		base.removePatientLessNVisit(5);
 		base_2.removePatientLessNVisit(5);
 
@@ -60,7 +62,8 @@ public class ICDMainFLD {
 		double[][] recoveredData = dataRecovery(new NMFRecovery(20), fm, fm, missingcodes, 0);
 
 		for (int r = 0; r < 5; r++) {
-			
+			Estimator.lambda  = 0.01;
+
 			FixedNumberTTSelection s = new FixedNumberTTSelection(fm, base.getLabels(), t_size);
 			s.select();
 			FixedNumberTTSelection ss = new FixedNumberTTSelection(recoveredData, base.getLabels(), t_size);
@@ -75,7 +78,7 @@ public class ICDMainFLD {
 			accuracy("sparseFLD-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), sFLD);
 			accuracy("Daehr-" + Estimator.lambda, ss.getTestingSet(), ss.getTestingLabels(), sFLD);
 
-			Estimator.lambda *= 0.1;
+			Estimator.lambda *= 0.5;
 
 			sFLD = new PDLassoFLD(s.getTrainingSet(), s.getTrainingLabels());
 			accuracy("sparseFLD-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), sFLD);
@@ -83,7 +86,7 @@ public class ICDMainFLD {
 			sFLD = new PDLassoFLD(ss.getTrainingSet(), ss.getTrainingLabels());
 			accuracy("Daehr-" + Estimator.lambda, ss.getTestingSet(), ss.getTestingLabels(), sFLD);
 
-			Estimator.lambda *= 0.1;
+			Estimator.lambda *= 0.5;
 
 			sFLD = new PDLassoFLD(s.getTrainingSet(), s.getTrainingLabels());
 			accuracy("sparseFLD-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), sFLD);
@@ -91,7 +94,7 @@ public class ICDMainFLD {
 			sFLD = new PDLassoFLD(ss.getTrainingSet(), ss.getTrainingLabels());
 			accuracy("Daehr-" + Estimator.lambda, ss.getTestingSet(), ss.getTestingLabels(), sFLD);
 
-			Estimator.lambda *= 0.1;
+			Estimator.lambda *= 0.5;
 
 			sFLD = new PDLassoFLD(s.getTrainingSet(), s.getTrainingLabels());
 			accuracy("sparseFLD-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), sFLD);
@@ -99,7 +102,7 @@ public class ICDMainFLD {
 			sFLD = new PDLassoFLD(ss.getTrainingSet(), ss.getTrainingLabels());
 			accuracy("Daehr-" + Estimator.lambda, ss.getTestingSet(), ss.getTestingLabels(), sFLD);
 
-			Estimator.lambda *= 0.1;
+			Estimator.lambda *= 0.5;
 
 			sFLD = new PDLassoFLD(s.getTrainingSet(), s.getTrainingLabels());
 			accuracy("sparseFLD-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), sFLD);
@@ -107,21 +110,6 @@ public class ICDMainFLD {
 			sFLD = new PDLassoFLD(ss.getTrainingSet(), ss.getTrainingLabels());
 			accuracy("Daehr-" + Estimator.lambda, ss.getTestingSet(), ss.getTestingLabels(), sFLD);
 
-			Estimator.lambda *= 0.1;
-
-			sFLD = new PDLassoFLD(s.getTrainingSet(), s.getTrainingLabels());
-			accuracy("sparseFLD-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), sFLD);
-
-			sFLD = new PDLassoFLD(ss.getTrainingSet(), ss.getTrainingLabels());
-			accuracy("Daehr-" + Estimator.lambda, ss.getTestingSet(), ss.getTestingLabels(), sFLD);
-
-			Estimator.lambda *= 0.1;
-
-			sFLD = new PDLassoFLD(s.getTrainingSet(), s.getTrainingLabels());
-			accuracy("sparseFLD-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), sFLD);
-
-			sFLD = new PDLassoFLD(ss.getTrainingSet(), ss.getTrainingLabels());
-			accuracy("Daehr-" + Estimator.lambda, ss.getTestingSet(), ss.getTestingLabels(), sFLD);
 
 		}
 
