@@ -8,20 +8,20 @@ import java.util.Set;
 
 import edu.uva.hdstats.Estimator;
 import edu.uva.hdstats.da.Classifier;
-import edu.uva.hdstats.da.LDA;
-import edu.uva.hdstats.da.PDLassoLDA;
+import edu.uva.hdstats.da.FLD;
+import edu.uva.hdstats.da.PDLassoFLD;
 import edu.uva.libopt.numeric.*;
 import edu.uva.sys.ehrloader.ml.FixedNumberTTSelection;
 import edu.uva.sys.ehrloader.recovery.*;
 
-public class ICDMainFLD {
+public class ICDMainFDA {
 
 	public static PrintStream ps = null;
 	public static int t_size = 2000;
 
 	static {
 		try {
-			ps = new PrintStream("/Users/bertrandx/Box Sync/CHSN_pattern mining/Jinghe/accuracy-LDA" + t_size + ".txt");
+			ps = new PrintStream("/Users/bertrandx/Box Sync/CHSN_pattern mining/Jinghe/accuracy-FLD" + t_size + ".txt");
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -63,62 +63,62 @@ public class ICDMainFLD {
 			FixedNumberTTSelection ss = new FixedNumberTTSelection(recoveredData, base.getLabels(), t_size);
 			ss.select(s.trainIndex);
 
-			LDA LDA = new LDA(s.getTrainingSet(), s.getTrainingLabels());
-			PDLassoLDA sLDA = new PDLassoLDA(s.getTrainingSet(), s.getTrainingLabels());
-			LDA = new LDA(ss.getTrainingSet(), ss.getTrainingLabels());
-			sLDA = new PDLassoLDA(ss.getTrainingSet(), ss.getTrainingLabels());
-			accuracy("LDA", s.getTestingSet(), s.getTestingLabels(), LDA);
-			accuracy("recoveredLDA", ss.getTestingSet(), ss.getTestingLabels(), LDA);
-			accuracy("sparseLDA-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), sLDA);
-			accuracy("Daehr-" + Estimator.lambda, ss.getTestingSet(), ss.getTestingLabels(), sLDA);
+			FLD FLD = new FLD(s.getTrainingSet(), s.getTrainingLabels());
+			PDLassoFLD sFLD = new PDLassoFLD(s.getTrainingSet(), s.getTrainingLabels());
+			FLD = new FLD(ss.getTrainingSet(), ss.getTrainingLabels());
+			sFLD = new PDLassoFLD(ss.getTrainingSet(), ss.getTrainingLabels());
+			accuracy("FLD", s.getTestingSet(), s.getTestingLabels(), FLD);
+			accuracy("recoveredFLD", ss.getTestingSet(), ss.getTestingLabels(), FLD);
+			accuracy("sparseFLD-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), sFLD);
+			accuracy("Daehr-" + Estimator.lambda, ss.getTestingSet(), ss.getTestingLabels(), sFLD);
 
 			Estimator.lambda *= 0.1;
 
-			sLDA = new PDLassoLDA(s.getTrainingSet(), s.getTrainingLabels());
-			accuracy("sparseLDA-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), sLDA);
+			sFLD = new PDLassoFLD(s.getTrainingSet(), s.getTrainingLabels());
+			accuracy("sparseFLD-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), sFLD);
 
-			sLDA = new PDLassoLDA(ss.getTrainingSet(), ss.getTrainingLabels());
-			accuracy("Daehr-" + Estimator.lambda, ss.getTestingSet(), ss.getTestingLabels(), sLDA);
-
-			Estimator.lambda *= 0.1;
-
-			sLDA = new PDLassoLDA(s.getTrainingSet(), s.getTrainingLabels());
-			accuracy("sparseLDA-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), sLDA);
-
-			sLDA = new PDLassoLDA(ss.getTrainingSet(), ss.getTrainingLabels());
-			accuracy("Daehr-" + Estimator.lambda, ss.getTestingSet(), ss.getTestingLabels(), sLDA);
+			sFLD = new PDLassoFLD(ss.getTrainingSet(), ss.getTrainingLabels());
+			accuracy("Daehr-" + Estimator.lambda, ss.getTestingSet(), ss.getTestingLabels(), sFLD);
 
 			Estimator.lambda *= 0.1;
 
-			sLDA = new PDLassoLDA(s.getTrainingSet(), s.getTrainingLabels());
-			accuracy("sparseLDA-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), sLDA);
+			sFLD = new PDLassoFLD(s.getTrainingSet(), s.getTrainingLabels());
+			accuracy("sparseFLD-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), sFLD);
 
-			sLDA = new PDLassoLDA(ss.getTrainingSet(), ss.getTrainingLabels());
-			accuracy("Daehr-" + Estimator.lambda, ss.getTestingSet(), ss.getTestingLabels(), sLDA);
-
-			Estimator.lambda *= 0.1;
-
-			sLDA = new PDLassoLDA(s.getTrainingSet(), s.getTrainingLabels());
-			accuracy("sparseLDA-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), sLDA);
-
-			sLDA = new PDLassoLDA(ss.getTrainingSet(), ss.getTrainingLabels());
-			accuracy("Daehr-" + Estimator.lambda, ss.getTestingSet(), ss.getTestingLabels(), sLDA);
+			sFLD = new PDLassoFLD(ss.getTrainingSet(), ss.getTrainingLabels());
+			accuracy("Daehr-" + Estimator.lambda, ss.getTestingSet(), ss.getTestingLabels(), sFLD);
 
 			Estimator.lambda *= 0.1;
 
-			sLDA = new PDLassoLDA(s.getTrainingSet(), s.getTrainingLabels());
-			accuracy("sparseLDA-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), sLDA);
+			sFLD = new PDLassoFLD(s.getTrainingSet(), s.getTrainingLabels());
+			accuracy("sparseFLD-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), sFLD);
 
-			sLDA = new PDLassoLDA(ss.getTrainingSet(), ss.getTrainingLabels());
-			accuracy("Daehr-" + Estimator.lambda, ss.getTestingSet(), ss.getTestingLabels(), sLDA);
+			sFLD = new PDLassoFLD(ss.getTrainingSet(), ss.getTrainingLabels());
+			accuracy("Daehr-" + Estimator.lambda, ss.getTestingSet(), ss.getTestingLabels(), sFLD);
 
 			Estimator.lambda *= 0.1;
 
-			sLDA = new PDLassoLDA(s.getTrainingSet(), s.getTrainingLabels());
-			accuracy("sparseLDA-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), sLDA);
+			sFLD = new PDLassoFLD(s.getTrainingSet(), s.getTrainingLabels());
+			accuracy("sparseFLD-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), sFLD);
 
-			sLDA = new PDLassoLDA(ss.getTrainingSet(), ss.getTrainingLabels());
-			accuracy("Daehr-" + Estimator.lambda, ss.getTestingSet(), ss.getTestingLabels(), sLDA);
+			sFLD = new PDLassoFLD(ss.getTrainingSet(), ss.getTrainingLabels());
+			accuracy("Daehr-" + Estimator.lambda, ss.getTestingSet(), ss.getTestingLabels(), sFLD);
+
+			Estimator.lambda *= 0.1;
+
+			sFLD = new PDLassoFLD(s.getTrainingSet(), s.getTrainingLabels());
+			accuracy("sparseFLD-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), sFLD);
+
+			sFLD = new PDLassoFLD(ss.getTrainingSet(), ss.getTrainingLabels());
+			accuracy("Daehr-" + Estimator.lambda, ss.getTestingSet(), ss.getTestingLabels(), sFLD);
+
+			Estimator.lambda *= 0.1;
+
+			sFLD = new PDLassoFLD(s.getTrainingSet(), s.getTrainingLabels());
+			accuracy("sparseFLD-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), sFLD);
+
+			sFLD = new PDLassoFLD(ss.getTrainingSet(), ss.getTrainingLabels());
+			accuracy("Daehr-" + Estimator.lambda, ss.getTestingSet(), ss.getTestingLabels(), sFLD);
 
 		}
 
