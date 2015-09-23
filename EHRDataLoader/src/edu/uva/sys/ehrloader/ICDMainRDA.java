@@ -8,13 +8,13 @@ import java.util.Set;
 
 import edu.uva.hdstats.Estimator;
 import edu.uva.hdstats.da.Classifier;
-import edu.uva.hdstats.da.LDA;
-import edu.uva.hdstats.da.PDLassoLDA;
+import edu.uva.hdstats.da.RDA;
+import edu.uva.hdstats.da.PDLassoRDA;
 import edu.uva.libopt.numeric.*;
 import edu.uva.sys.ehrloader.ml.BalanceTTSelection;
 import edu.uva.sys.ehrloader.recovery.*;
 
-public class ICDMainLDA {
+public class ICDMainRDA {
 
 	public static PrintStream ps = null;
 	public static int t_size = 400;
@@ -65,14 +65,15 @@ public class ICDMainLDA {
 		ps.println("using NMF 10");
 		double[][] recoveredData = dataRecovery(new NMFRecovery(10), fm, fm, missingcodes, 0);
 
+		for(double alpha=0.1;alpha<1;alpha+=0.1)
 		for (int t = 200; t <= 1000; t += 200) {
 			for (int te = 100; te <= 500; te += 100) {
 				for (int days = 30; days <= 90; days += 30) {
 					t_size = t;
 					te_size = te;
 					try {
-						ps = new PrintStream("/Users/bertrandx/Box Sync/CHSN_pattern mining/Jinghe/accuracy-LDA-"
-								+ t_size + "-" + te_size + "-" + days + ".txt");
+						ps = new PrintStream("/Users/bertrandx/Box Sync/CHSN_pattern mining/Jinghe/accuracy-RDA-"
+								+ t_size + "-" + te_size + "-" + days +"-"+alpha+".txt");
 					} catch (FileNotFoundException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -87,22 +88,22 @@ public class ICDMainLDA {
 								te_size);
 						ss.select(s.trainIndex, s.testIndex);
 
-						LDA LDA = new LDA(s.getTrainingSet(), s.getTrainingLabels());
-						PDLassoLDA sLDA = new PDLassoLDA(s.getTrainingSet(), s.getTrainingLabels());
-						LDA = new LDA(ss.getTrainingSet(), ss.getTrainingLabels());
-						sLDA = new PDLassoLDA(ss.getTrainingSet(), ss.getTrainingLabels());
-						accuracy("LDA", s.getTestingSet(), s.getTestingLabels(), LDA);
-						accuracy("recoveredLDA", ss.getTestingSet(), ss.getTestingLabels(), LDA);
-						accuracy("Daehr-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), sLDA);
-						accuracy("DDaehr-" + Estimator.lambda, ss.getTestingSet(), ss.getTestingLabels(), sLDA);
+						RDA RDA = new RDA(s.getTrainingSet(), s.getTrainingLabels(),alpha);
+						PDLassoRDA sRDA = new PDLassoRDA(s.getTrainingSet(), s.getTrainingLabels(),alpha);
+						RDA = new RDA(ss.getTrainingSet(), ss.getTrainingLabels(),alpha);
+						sRDA = new PDLassoRDA(ss.getTrainingSet(), ss.getTrainingLabels(),alpha);
+						accuracy("RDA", s.getTestingSet(), s.getTestingLabels(), RDA);
+						accuracy("recoveredRDA", ss.getTestingSet(), ss.getTestingLabels(), RDA);
+						accuracy("Daehr-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), sRDA);
+						accuracy("DDaehr-" + Estimator.lambda, ss.getTestingSet(), ss.getTestingLabels(), sRDA);
 						for (int ir = 0; ir < 9; ir++) {
 							Estimator.lambda *= 0.1;
 
-							sLDA = new PDLassoLDA(s.getTrainingSet(), s.getTrainingLabels());
-							accuracy("Daehr-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), sLDA);
+							sRDA = new PDLassoRDA(s.getTrainingSet(), s.getTrainingLabels(),alpha);
+							accuracy("Daehr-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), sRDA);
 
-							sLDA = new PDLassoLDA(ss.getTrainingSet(), ss.getTrainingLabels());
-							accuracy("DDaehr-" + Estimator.lambda, ss.getTestingSet(), ss.getTestingLabels(), sLDA);
+							sRDA = new PDLassoRDA(ss.getTrainingSet(), ss.getTrainingLabels(),alpha);
+							accuracy("DDaehr-" + Estimator.lambda, ss.getTestingSet(), ss.getTestingLabels(), sRDA);
 						}
 					}
 

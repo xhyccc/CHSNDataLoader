@@ -1,6 +1,8 @@
 package edu.uva.sys.ehrloader.ml;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class BalanceTTSelection implements TTSelection{
@@ -23,53 +25,53 @@ public class BalanceTTSelection implements TTSelection{
 		this._labels=labels;
 		this.trainingSet=new double[t_size*2][data[0].length];
 		this.trainingLabels=new int[t_size*2];
-		this.testingSet=new double[data.length-te_size*2][data[0].length];
-		this.testingLabels=new int[labels.length-te_size*2];
+		this.testingSet=new double[te_size*2][data[0].length];
+		this.testingLabels=new int[te_size*2];
 	}
 	
 	public void select(){
-		Set<Integer> pTrain=new HashSet<Integer>(); 
-		Set<Integer> nTrain=new HashSet<Integer>(); 
-		Set<Integer> pTest=new HashSet<Integer>(); 
-		Set<Integer> nTest=new HashSet<Integer>(); 
-		while(pTrain.size()<_t_size){
-			for(int i=0;i<_data.length&&pTrain.size()<_t_size;i++){
-				if(Math.random()<((double)_t_size/(double)_data.length)&&!pTrain.contains(i)
-						&&this._labels[i]==1){
-					pTrain.add(i);
-				}
+		System.out.println("start selecting training/testing set");
+		List<Integer> pTrain=new ArrayList<Integer>(); 
+		List<Integer> nTrain=new ArrayList<Integer>(); 
+		List<Integer> pTest=new ArrayList<Integer>(); 
+		List<Integer> nTest=new ArrayList<Integer>();
+		
+		for(int i=0;i<this._labels.length;i++){
+			if(this._labels[i]==1){
+				pTrain.add(i);
+			}else{
+				nTrain.add(i);
 			}
 		}
 		
-		while(nTrain.size()<_t_size){
-			for(int i=0;i<_data.length&&nTrain.size()<_t_size;i++){
-				if(Math.random()<((double)_t_size/(double)_data.length)&&!nTrain.contains(i)
-						&&this._labels[i]==0){
-					nTrain.add(i);
-				}
-			}
+		System.out.println("all positive patients\t"+pTrain.size());
+		System.out.println("all negative patients\t"+nTrain.size());
+		
+		while(pTrain.size()>this._t_size){
+			int toRemove=(int)(Math.random()*(double)pTrain.size());
+			pTest.add(pTrain.remove(Math.min(toRemove,pTrain.size()-1)));			
 		}
 		
-		while(pTest.size()<_te_size){
-			for(int i=0;i<_data.length&&pTrain.size()<_te_size;i++){
-				if(Math.random()<((double)_te_size/(double)_data.length)&&!pTrain.contains(i)
-						&&!pTest.contains(i)&&this._labels[i]==1){
-					pTest.add(i);
-				}
-			}
+		while(nTrain.size()>this._t_size){
+			int toRemove=(int)(Math.random()*(double)nTrain.size());
+			nTest.add(nTrain.remove(Math.min(toRemove,nTrain.size()-1)));			
 		}
 		
-		while(nTest.size()<_te_size){
-			for(int i=0;i<_data.length&&pTrain.size()<_te_size;i++){
-				if(Math.random()<((double)_te_size/(double)_data.length)&&!nTrain.contains(i)
-						&&!nTest.contains(i)&&this._labels[i]==0){
-					nTest.add(i);
-				}
-			}
+		while(pTest.size()>this._te_size){
+			int toRemove=(int)(Math.random()*(double)pTrain.size());
+			pTest.remove(Math.min(toRemove,pTest.size()-1));			
+		}
+		
+		while(nTest.size()>this._te_size){
+			int toRemove=(int)(Math.random()*(double)nTrain.size());
+			nTest.remove(Math.min(toRemove,nTest.size()-1));			
 		}
 
-
-
+		System.out.println("positive patients for training\t"+pTrain.size());
+		System.out.println("negative patients for training\t"+nTrain.size());
+		System.out.println("positive patients for testing\t"+pTest.size());
+		System.out.println("negative patients for testing\t"+nTest.size());
+	
 		
 		this.trainIndex=new HashSet<Integer>();
 		this.trainIndex.addAll(pTrain);
@@ -77,6 +79,10 @@ public class BalanceTTSelection implements TTSelection{
 		this.testIndex=new HashSet<Integer>();
 		this.testIndex.addAll(pTest);
 		this.testIndex.addAll(nTest);
+		
+		System.out.println("training set\t"+this.trainIndex.size());
+		System.out.println("testing set\t"+this.testIndex.size());
+
 		
 	//	int t_index=0;
 //		while(trainIndex.size()<2*_t_size){
@@ -93,9 +99,12 @@ public class BalanceTTSelection implements TTSelection{
 			if(trainIndex.contains(i)){
 				fromDataToTraining(i,t_index++);
 			}else if(testIndex.contains(i)){
-				fromDataToTesting(i,te_index);
+				fromDataToTesting(i,te_index++);
 			}
 		}
+		
+		System.out.println("finish selecting training/testing set");
+
 	}
 	
 	public void select(Set<Integer> si,Set<Integer> ssi){

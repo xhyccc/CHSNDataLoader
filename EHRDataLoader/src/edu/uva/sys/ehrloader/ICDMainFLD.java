@@ -17,43 +17,38 @@ import edu.uva.sys.ehrloader.recovery.*;
 public class ICDMainFLD {
 
 	public static PrintStream ps = null;
-	public static int t_size = 3200;
-	public static int te_size= 100;
-	public static int days= 30;
+	public static int t_size = 400;
+	public static int te_size = 100;
+	public static int days = 30;
+
 	public static void main(String[] args) {
 
 		if (args.length >= 1)
 			t_size = Integer.parseInt(args[0]);
-		
+
 		if (args.length >= 2)
 			te_size = Integer.parseInt(args[1]);
-		
+
 		if (args.length >= 3)
 			days = Integer.parseInt(args[2]);
 
-
-		try {
-			ps = new PrintStream("/Users/bertrandx/Box Sync/CHSN_pattern mining/Jinghe/accuracy-FLD" + t_size + ".txt");
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		ps = System.out;
 
 		EHRRecordMap map = new EHRRecordMap("/Users/bertrandx/Box Sync/CHSN_pattern mining/Jinghe/mapping.txt");
 
 		EHRecordBase base = ICDLineReader.load(map,
-				"/Users/bertrandx/Box Sync/CHSN_pattern mining/Jinghe/non-mh_icd.csv", "x_icdcode", 500000);
+				"/Users/bertrandx/Box Sync/CHSN_pattern mining/Jinghe/non-mh_icd.csv", "x_icdcode", 100000);
 
 		EHRecordBase base_2 = ICDLineReader.load(map, "/Users/bertrandx/Box Sync/CHSN_pattern mining/Jinghe/icd_MD.csv",
-				"y_icdcode", 300000);
+				"y_icdcode", 100000);
 
-	//	base_2.removeVisitsAfter(MHCode.codes);
+		// base_2.removeVisitsAfter(MHCode.codes);
 
-	//	base.removePatientLessNVisit(5);
-	//	base_2.removePatientLessNVisit(5);
+		// base.removePatientLessNVisit(5);
+		// base_2.removePatientLessNVisit(5);
 
-	//	base.setLabelsForAllPatients(0);
-	//	base_2.setLabelsForAllPatients(1);
+		// base.setLabelsForAllPatients(0);
+		// base_2.setLabelsForAllPatients(1);
 		base.insertRecords(base_2);
 		base.setPositiveLabel(MHCode.codes);
 		base.removeVisitsAfter(MHCode.codes, days);
@@ -70,30 +65,48 @@ public class ICDMainFLD {
 		ps.println("using NMF 10");
 		double[][] recoveredData = dataRecovery(new NMFRecovery(10), fm, fm, missingcodes, 0);
 
-		for (int r = 0; r < 30; r++) {
-			Estimator.lambda = 0.005;
+		for (int t = 200; t <= 1000; t += 200) {
+			for (int te = 100; te <= 500; te += 100) {
+				for (int days = 30; days <= 90; days += 30) {
+					t_size = t;
+					te_size = te;
+					try {
+						ps = new PrintStream("/Users/bertrandx/Box Sync/CHSN_pattern mining/Jinghe/accuracy-FLD-"
+								+ t_size + "-" + te_size + "-" + days + ".txt");
+					} catch (FileNotFoundException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 
-			BalanceTTSelection s = new BalanceTTSelection(fm, base.getLabels(), t_size,te_size);
-			s.select();
-			BalanceTTSelection ss = new BalanceTTSelection(recoveredData, base.getLabels(), t_size,te_size);
-			ss.select(s.trainIndex,ss.testIndex);
+					for (int r = 0; r < 30; r++) {
+						Estimator.lambda = 0.005;
 
-			FLD FLD = new FLD(s.getTrainingSet(), s.getTrainingLabels());
-			PDLassoFLD sFLD = new PDLassoFLD(s.getTrainingSet(), s.getTrainingLabels());
-			FLD = new FLD(ss.getTrainingSet(), ss.getTrainingLabels());
-		//	sFLD = new PDLassoFLD(ss.getTrainingSet(), ss.getTrainingLabels());
-			accuracy("FLD", s.getTestingSet(), s.getTestingLabels(), FLD);
-			accuracy("recoveredFLD", ss.getTestingSet(), ss.getTestingLabels(), FLD);
-			accuracy("Daehr-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), sFLD);
-		//	accuracy("Daehr-" + Estimator.lambda, ss.getTestingSet(), ss.getTestingLabels(), sFLD);
-			for (int ir = 0; ir < 9; ir++) {
-				Estimator.lambda *= 0.1;
+						BalanceTTSelection s = new BalanceTTSelection(fm, base.getLabels(), t_size, te_size);
+						s.select();
+						BalanceTTSelection ss = new BalanceTTSelection(recoveredData, base.getLabels(), t_size,
+								te_size);
+						ss.select(s.trainIndex, s.testIndex);
 
-				sFLD = new PDLassoFLD(s.getTrainingSet(), s.getTrainingLabels());
-				accuracy("Daehr-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), sFLD);
+						FLD FLD = new FLD(s.getTrainingSet(), s.getTrainingLabels());
+						PDLassoFLD sFLD = new PDLassoFLD(s.getTrainingSet(), s.getTrainingLabels());
+						FLD = new FLD(ss.getTrainingSet(), ss.getTrainingLabels());
+						sFLD = new PDLassoFLD(ss.getTrainingSet(), ss.getTrainingLabels());
+						accuracy("FLD", s.getTestingSet(), s.getTestingLabels(), FLD);
+						accuracy("recoveredFLD", ss.getTestingSet(), ss.getTestingLabels(), FLD);
+						accuracy("Daehr-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), sFLD);
+						accuracy("DDaehr-" + Estimator.lambda, ss.getTestingSet(), ss.getTestingLabels(), sFLD);
+						for (int ir = 0; ir < 9; ir++) {
+							Estimator.lambda *= 0.1;
 
-		//		sFLD = new PDLassoFLD(ss.getTrainingSet(), ss.getTrainingLabels());
-		//		accuracy("Daehr-" + Estimator.lambda, ss.getTestingSet(), ss.getTestingLabels(), sFLD);
+							sFLD = new PDLassoFLD(s.getTrainingSet(), s.getTrainingLabels());
+							accuracy("Daehr-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), sFLD);
+
+							sFLD = new PDLassoFLD(ss.getTrainingSet(), ss.getTrainingLabels());
+							accuracy("DDaehr-" + Estimator.lambda, ss.getTestingSet(), ss.getTestingLabels(), sFLD);
+						}
+					}
+
+				}
 			}
 		}
 
