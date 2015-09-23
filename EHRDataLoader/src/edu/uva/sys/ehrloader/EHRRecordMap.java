@@ -14,7 +14,7 @@ public class EHRRecordMap {
 			BufferedReader br=new BufferedReader(new FileReader(fpath));
 			String ln=br.readLine();
 			while(ln!=null){
-				String cname=ln;
+				String cname=ln.split(" ")[0];
 				ln=br.readLine();
 				String[] codes=ln.split(" ");
 				for(String code:codes){

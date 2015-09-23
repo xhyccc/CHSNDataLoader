@@ -5,11 +5,11 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class EHRecordBase {
-	public static int missingLines=0;
-	
+	public static int missingLines = 0;
+
 	public static SimpleDateFormat dt = new SimpleDateFormat("yyyy-mm-dd");
 
-	public HashMap<String, HashMap<Date, Set<String>>> _database = new HashMap<String, HashMap<Date, Set<String>>>();
+	public HashMap<String, HashMap<Date, List<String>>> _database = new HashMap<String, HashMap<Date, List<String>>>();
 
 	public List<String> _patients = new ArrayList<String>();
 	public List<String> _codes = new ArrayList<String>();
@@ -38,28 +38,60 @@ public class EHRecordBase {
 			return _bases.get(name);
 		return new EHRecordBase(name);
 	}
-	
-	public void removeVisitsAfter(Set<String> codes) {
-		for(String patient:_patients){
-			HashMap<Date,Set<String>> ap=_database.get(patient);
-			List<Date> ds=new ArrayList<Date>(ap.keySet());
+
+	public void removeVisitsAfter(Set<String> codes, int days) {
+		for (String patient : _patients) {
+			HashMap<Date, List<String>> ap = _database.get(patient);
+			List<Date> ds = new ArrayList<Date>(ap.keySet());
 			Collections.sort(ds);
-			boolean remove=false;
-			Set<Date> toRemove=new HashSet<Date>();
-			for(Date d:ds){
-				for(String c:ap.get(d)){
-					if(codes.contains(c))
-						remove=true;
+			boolean detect = false;
+			int index = 0;
+			for (; index < ds.size() && !detect; index++) {
+				Date d = ds.get(index);
+				for (String c : ap.get(d)) {
+					if (codes.contains(c)) {
+						detect = true;
+						System.out.println("hit:\t" + c);
+					}
 				}
-				if(remove)
-					toRemove.add(d);
 			}
-			for(Date d:toRemove)
-				ap.remove(d);
+			index--;
+
+			for (int i = index; i < ds.size(); i++)
+				ap.remove(ds.get(i));
+			if (index > 1) {
+				for (int i = index - 1; i >= 0; i--) {
+					if(ds.get(index).getTime()-ds.get(i)
+							.getTime()<=(24*3600*days)){
+						ap.remove(i);
+					}
+				}
+			}
 		}
-		
+
 	}
 
+	public void setPositiveLabel(Set<String> codes) {
+		for (String patient : _patients) {
+			HashMap<Date, List<String>> ap = _database.get(patient);
+			List<Date> ds = new ArrayList<Date>(ap.keySet());
+			Collections.sort(ds);
+			boolean positive = false;
+			for (Date d : ds) {
+				for (String c : ap.get(d)) {
+					if (codes.contains(c)) {
+						positive = true;
+					}
+				}
+			}
+			if (positive) {
+				this._labels.put(patient, 1);
+			} else {
+				this._labels.put(patient, 0);
+			}
+		}
+
+	}
 
 	public void removePatientLessNVisit(int visit) {
 		Set<String> toRemove = new HashSet<String>();
@@ -89,7 +121,7 @@ public class EHRecordBase {
 		this._labels.putAll(_base._labels);
 		this._ages.putAll(_base._ages);
 		this._gender.putAll(_base._gender);
-		this.missingLines=_base.missingLines;
+		this.missingLines = _base.missingLines;
 	}
 
 	public void insertRecord(String pid, String dtime, String code, int age, int gender, int hospital) {
@@ -115,10 +147,10 @@ public class EHRecordBase {
 		if (!_patients.contains(pid))
 			this._patients.add(pid);
 		if (!_database.containsKey(pid)) {
-			_database.put(pid, new HashMap<Date, Set<String>>());
+			_database.put(pid, new HashMap<Date, List<String>>());
 		}
 		if (!_database.get(pid).containsKey(dIns)) {
-			_database.get(pid).put(dIns, new HashSet<String>());
+			_database.get(pid).put(dIns, new ArrayList<String>());
 		}
 		_database.get(pid).get(dIns).add(code);
 	}
@@ -268,13 +300,13 @@ public class EHRecordBase {
 	}
 
 	public int[] getLabels() {
-		List<String> lls=this.getPatients();
-		int[] labels=new int[lls.size()];
-		int index=0;
-		for(String pid:lls){
-			labels[index++]=this._labels.get(pid);
+		List<String> lls = this.getPatients();
+		int[] labels = new int[lls.size()];
+		int index = 0;
+		for (String pid : lls) {
+			labels[index++] = this._labels.get(pid);
 		}
 		return labels;
 	}
-	
+
 }
