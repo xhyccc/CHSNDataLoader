@@ -10,6 +10,7 @@ import edu.uva.hdstats.Estimator;
 import edu.uva.hdstats.da.Classifier;
 import edu.uva.hdstats.da.LDA;
 import edu.uva.hdstats.da.PDLassoLDA;
+import edu.uva.hdstats.da.ShrinkageLDA;
 import edu.uva.libopt.numeric.*;
 import edu.uva.sys.ehrloader.ml.BalanceTTSelection;
 import edu.uva.sys.ehrloader.recovery.*;
@@ -63,13 +64,13 @@ public class ICDMainLDA {
 
 		System.out.println("matrix " + fm.length + " x " + fm[0].length);
 		ps.println("using NMF 10");
-		double[][] recoveredData = dataRecovery(new NMFRecovery(10), fm, fm, missingcodes, 0);
+	//	double[][] recoveredData = dataRecovery(new NMFRecovery(10), fm, fm, missingcodes, 0);
 
-		for (int t = 200; t <= 1000; t += 200) {
-			for (int te = 100; te <= 500; te += 100) {
+		for (int t = 200; t <= 1000; t += 400) {
+		//	for (int te = 100; te <= 500; te += 100) {
 				for (int days = 30; days <= 90; days += 30) {
 					t_size = t;
-					te_size = te;
+					te_size = 200;
 					try {
 						ps = new PrintStream("/Users/bertrandx/Box Sync/CHSN_pattern mining/Jinghe/accuracy-LDA-"
 								+ t_size + "-" + te_size + "-" + days + ".txt");
@@ -79,35 +80,43 @@ public class ICDMainLDA {
 					}
 
 					for (int r = 0; r < 30; r++) {
-						Estimator.lambda = 0.005;
+						Estimator.lambda = 0.00005;
+						ShrinkageLDA.slambda  = 0.75;
 
 						BalanceTTSelection s = new BalanceTTSelection(fm, base.getLabels(), t_size, te_size);
 						s.select();
-						BalanceTTSelection ss = new BalanceTTSelection(recoveredData, base.getLabels(), t_size,
-								te_size);
-						ss.select(s.trainIndex, s.testIndex);
+				//		BalanceTTSelection ss = new BalanceTTSelection(recoveredData, base.getLabels(), t_size,
+				//				te_size);
+				//		ss.select(s.trainIndex, s.testIndex);
 
 						LDA LDA = new LDA(s.getTrainingSet(), s.getTrainingLabels());
 						PDLassoLDA sLDA = new PDLassoLDA(s.getTrainingSet(), s.getTrainingLabels());
-						LDA = new LDA(ss.getTrainingSet(), ss.getTrainingLabels());
-						sLDA = new PDLassoLDA(ss.getTrainingSet(), ss.getTrainingLabels());
+					//	LDA = new LDA(ss.getTrainingSet(), ss.getTrainingLabels());
+					//	sLDA = new PDLassoLDA(ss.getTrainingSet(), ss.getTrainingLabels());
 						accuracy("LDA", s.getTestingSet(), s.getTestingLabels(), LDA);
-						accuracy("recoveredLDA", ss.getTestingSet(), ss.getTestingLabels(), LDA);
+					//	accuracy("recoveredLDA", ss.getTestingSet(), ss.getTestingLabels(), LDA);
 						accuracy("Daehr-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), sLDA);
-						accuracy("DDaehr-" + Estimator.lambda, ss.getTestingSet(), ss.getTestingLabels(), sLDA);
-						for (int ir = 0; ir < 9; ir++) {
+					//	accuracy("DDaehr-" + Estimator.lambda, ss.getTestingSet(), ss.getTestingLabels(), sLDA);
+						for (int ir = 0; ir < 5; ir++) {
 							Estimator.lambda *= 0.1;
 
 							sLDA = new PDLassoLDA(s.getTrainingSet(), s.getTrainingLabels());
 							accuracy("Daehr-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), sLDA);
 
-							sLDA = new PDLassoLDA(ss.getTrainingSet(), ss.getTrainingLabels());
-							accuracy("DDaehr-" + Estimator.lambda, ss.getTestingSet(), ss.getTestingLabels(), sLDA);
+					//		sLDA = new PDLassoLDA(ss.getTrainingSet(), ss.getTrainingLabels());
+					//		accuracy("DDaehr-" + Estimator.lambda, ss.getTestingSet(), ss.getTestingLabels(), sLDA);
 						}
+						
+						while (ShrinkageLDA.slambda>0) {
+							ShrinkageLDA sELDA =new ShrinkageLDA(s.getTrainingSet(), s.getTrainingLabels());
+							accuracy("Shrinkage-" + ShrinkageLDA.slambda, s.getTestingSet(), s.getTestingLabels(), sELDA);
+							ShrinkageLDA.slambda -=0.25;
+						}
+
 					}
 
 				}
-			}
+		//	}
 		}
 
 	}
