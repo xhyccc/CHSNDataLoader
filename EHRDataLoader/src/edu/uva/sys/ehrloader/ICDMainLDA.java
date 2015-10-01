@@ -107,7 +107,7 @@ public class ICDMainLDA {
 					//		accuracy("DDaehr-" + Estimator.lambda, ss.getTestingSet(), ss.getTestingLabels(), sLDA);
 						}
 						
-						while (ShrinkageLDA.slambda>0) {
+						while (ShrinkageLDA.slambda>=0) {
 							ShrinkageLDA sELDA =new ShrinkageLDA(s.getTrainingSet(), s.getTrainingLabels());
 							accuracy("Shrinkage-" + ShrinkageLDA.slambda, s.getTestingSet(), s.getTestingLabels(), sELDA);
 							ShrinkageLDA.slambda -=0.25;
