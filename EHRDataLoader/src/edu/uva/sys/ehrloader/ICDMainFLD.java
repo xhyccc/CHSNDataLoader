@@ -89,20 +89,18 @@ public class ICDMainFLD {
 
 						FLD FLD = new FLD(s.getTrainingSet(), s.getTrainingLabels());
 						PDLassoFLD sFLD = new PDLassoFLD(s.getTrainingSet(), s.getTrainingLabels());
-						FLD = new FLD(ss.getTrainingSet(), ss.getTrainingLabels());
-						sFLD = new PDLassoFLD(ss.getTrainingSet(), ss.getTrainingLabels());
-						accuracy("FLD", s.getTestingSet(), s.getTestingLabels(), FLD);
+						FLD rFLD = new FLD(ss.getTrainingSet(), ss.getTrainingLabels());
+						PDLassoFLD rsFLD = new PDLassoFLD(ss.getTrainingSet(), ss.getTrainingLabels());
+						accuracy("FLD", s.getTestingSet(), s.getTestingLabels(), rFLD);
 						accuracy("recoveredFLD", ss.getTestingSet(), ss.getTestingLabels(), FLD);
 						accuracy("Daehr-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), sFLD);
-						accuracy("DDaehr-" + Estimator.lambda, ss.getTestingSet(), ss.getTestingLabels(), sFLD);
+						accuracy("DDaehr-" + Estimator.lambda, ss.getTestingSet(), ss.getTestingLabels(), rsFLD);
 						for (int ir = 0; ir < 9; ir++) {
 							Estimator.lambda *= 0.1;
-
 							sFLD = new PDLassoFLD(s.getTrainingSet(), s.getTrainingLabels());
+							rsFLD = new PDLassoFLD(ss.getTrainingSet(), ss.getTrainingLabels());
 							accuracy("Daehr-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), sFLD);
-
-							sFLD = new PDLassoFLD(ss.getTrainingSet(), ss.getTrainingLabels());
-							accuracy("DDaehr-" + Estimator.lambda, ss.getTestingSet(), ss.getTestingLabels(), sFLD);
+							accuracy("DDaehr-" + Estimator.lambda, ss.getTestingSet(), ss.getTestingLabels(), rsFLD);
 						}
 					}
 

@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 import java.io.FileReader;
 
 public class ResultAnalysis {
@@ -14,15 +15,14 @@ public class ResultAnalysis {
 
 	public static void main(String[] args) {
 		nmap.put("Daehr-5.000000000000001E-7", "daehr");
-		nmap.put("DDaehr-5.000000000000001E-7", "rec+d");
+	//	nmap.put("DDaehr-5.000000000000001E-7", "rec+d");
 		nmap.put("LDA", "LDA");
-		nmap.put("recoveredLDA", "recover");
+	//	nmap.put("recoveredLDA", "recover");
 		String[] names={"LDA","recoveredLDA","Daehr-5.000000000000001E-7","DDaehr-5.000000000000001E-7"};
-		for (int t = 200; t <= 1000; t += 200) {
-			for (int te = 100; te <= 500; te += 100) {
+		for (int t = 200; t <= 3000; t += 200) {
 				for (int days = 30; days <= 90; days += 30) {
 					int t_size = t;
-					int te_size = te;
+					int te_size = 200;
 					try {
 						BufferedReader br = new BufferedReader(
 								new FileReader("/Users/bertrandx/Box Sync/CHSN_pattern mining/Jinghe/accuracy-LDA-"
@@ -50,15 +50,16 @@ public class ResultAnalysis {
 						}
 
 
-					System.out.println("training set:"+t+"\t testing set:"+te+"\t days:"+days);
-					for(String n:names){
+					System.out.println("training set:"+t+"\t testing set:"+200+"\t days:"+days);
+					Set<String> ns=fp.keySet();
+					for(String n:ns){
 						double pf1=(double)(2.0*tp.get(n)/(double)(2.0*tp.get(n)+fp.get(n)+fn.get(n)));
 						double nf1=(double)(2.0*tn.get(n)/(double)(2.0*tn.get(n)+fp.get(n)+fn.get(n)));
 						double acc=((double)(tp.get(n)+tn.get(n))/(double)(tp.get(n)+tn.get(n)+fp.get(n)+fn.get(n)));
 						double sens=((double)(tp.get(n))/(double)(tp.get(n)+fn.get(n)));
 						double spec=((double)(tn.get(n))/(double)(tn.get(n)+fp.get(n)));
 
-						System.out.println(nmap.get(n)+"\t"+acc+"\t"+pf1+"\t"+nf1+"\t"+(pf1+nf1)+"\t"+sens+"\t"+spec);
+						System.out.println(n+"\t"+acc+"\t"+pf1+"\t"+nf1+"\t"+(pf1+nf1)+"\t"+sens+"\t"+spec);
 					}
 					System.out.println();
 
@@ -74,4 +75,3 @@ public class ResultAnalysis {
 		}
 	}
 
-}

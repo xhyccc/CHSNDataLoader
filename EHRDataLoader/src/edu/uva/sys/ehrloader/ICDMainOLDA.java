@@ -8,13 +8,18 @@ import java.util.Set;
 
 import edu.uva.hdstats.Estimator;
 import edu.uva.hdstats.da.Classifier;
-import edu.uva.hdstats.da.RDA;
-import edu.uva.hdstats.da.PDLassoRDA;
+import edu.uva.hdstats.da.DaehrLDA;
+import edu.uva.hdstats.da.LDA;
+import edu.uva.hdstats.da.OLDA;
+import edu.uva.hdstats.da.OrgLDA;
+import edu.uva.hdstats.da.PDLassoLDA;
+import edu.uva.hdstats.da.ShLDA;
+import edu.uva.hdstats.da.ShrinkageLDA;
 import edu.uva.libopt.numeric.*;
 import edu.uva.sys.ehrloader.ml.BalanceTTSelection;
 import edu.uva.sys.ehrloader.recovery.*;
 
-public class ICDMainRDA {
+public class ICDMainOLDA {
 
 	public static PrintStream ps = null;
 	public static int t_size = 400;
@@ -59,56 +64,79 @@ public class ICDMainRDA {
 		ps.println("dates: " + base.getDates().size());
 
 		double[][] fm = base.getFrequencyMatrix();
-		HashMap<Integer, Set<Integer>> missingcodes = new HashMap<Integer, Set<Integer>>();
+	//	HashMap<Integer, Set<Integer>> missingcodes = new HashMap<Integer, Set<Integer>>();
 
 		System.out.println("matrix " + fm.length + " x " + fm[0].length);
-		ps.println("using NMF 10");
-		double[][] recoveredData = dataRecovery(new NMFRecovery(10), fm, fm, missingcodes, 0);
+	//	ps.println("using NMF 10");
+	//	double[][] recoveredData = dataRecovery(new NMFRecovery(10), fm, fm, missingcodes, 0);
 
-		for(double alpha=0.1;alpha<1;alpha+=0.1)
-		for (int t = 200; t <= 1000; t += 200) {
-			for (int te = 100; te <= 500; te += 100) {
+		for (int t = 50; t <= 800; t += 50) {
+		//	for (int te = 100; te <= 500; te += 100) {
 				for (int days = 30; days <= 90; days += 30) {
 					t_size = t;
-					te_size = te;
+					te_size = 200;
 					try {
-						ps = new PrintStream("/Users/bertrandx/Box Sync/CHSN_pattern mining/Jinghe/accuracy-RDA-"
-								+ t_size + "-" + te_size + "-" + days +"-"+alpha+".txt");
+						ps = new PrintStream("/Users/bertrandx/Box Sync/CHSN_pattern mining/Jinghe/accuracy-oLDA-"
+								+ t_size + "-" + te_size + "-" + days + ".txt");
 					} catch (FileNotFoundException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 
 					for (int r = 0; r < 30; r++) {
-						Estimator.lambda = 0.005;
+						ShrinkageLDA.slambda  = 0.75;
 
 						BalanceTTSelection s = new BalanceTTSelection(fm, base.getLabels(), t_size, te_size);
 						s.select();
-						BalanceTTSelection ss = new BalanceTTSelection(recoveredData, base.getLabels(), t_size,
-								te_size);
-						ss.select(s.trainIndex, s.testIndex);
+				//		BalanceTTSelection ss = new BalanceTTSelection(recoveredData, base.getLabels(), t_size,
+				//				te_size);
+				//		ss.select(s.trainIndex, s.testIndex);
 
-						RDA RDA = new RDA(s.getTrainingSet(), s.getTrainingLabels(),alpha);
-						PDLassoRDA sRDA = new PDLassoRDA(s.getTrainingSet(), s.getTrainingLabels(),alpha);
-						RDA = new RDA(ss.getTrainingSet(), ss.getTrainingLabels(),alpha);
-						sRDA = new PDLassoRDA(ss.getTrainingSet(), ss.getTrainingLabels(),alpha);
-						accuracy("RDA", s.getTestingSet(), s.getTestingLabels(), RDA);
-						accuracy("recoveredRDA", ss.getTestingSet(), ss.getTestingLabels(), RDA);
-						accuracy("Daehr-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), sRDA);
-						accuracy("DDaehr-" + Estimator.lambda, ss.getTestingSet(), ss.getTestingLabels(), sRDA);
-						for (int ir = 0; ir < 9; ir++) {
-							Estimator.lambda *= 0.1;
+						OLDA LDA = new  OLDA(s.getTrainingSet(), s.getTrainingLabels(),false);
+					//	DaehrLDA sLDA = new DaehrLDA(s.getTrainingSet(), s.getTrainingLabels(),false);
+					//	LDA = new LDA(ss.getTrainingSet(), ss.getTrainingLabels());
+					//	sLDA = new PDLassoLDA(ss.getTrainingSet(), ss.getTrainingLabels());
+					//	accuracy("training LDA", s.getTrainingSet(), s.getTrainingLabels(), LDA);
+						accuracy("LDA", s.getTestingSet(), s.getTestingLabels(), LDA);
+					//	accuracy("recoveredLDA", ss.getTestingSet(), ss.getTestingLabels(), LDA);
+					//	accuracy("training Daehr-" + Estimator.lambda, s.getTrainingSet(), s.getTrainingLabels(), sLDA);
+					//	accuracy("Daehr-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), sLDA);
+					//	accuracy("DDaehr-" + Estimator.lambda, ss.getTestingSet(), ss.getTestingLabels(), sLDA);
+					//	for (int ir = 0; ir < 10; ir++) {
+					//		Estimator.lambda -= 0.001;
 
-							sRDA = new PDLassoRDA(s.getTrainingSet(), s.getTrainingLabels(),alpha);
-							accuracy("Daehr-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), sRDA);
+					//	sLDA = new PDLassoLDA(s.getTrainingSet(), s.getTrainingLabels());
+					//		accuracy("training Daehr-" + Estimator.lambda, s.getTrainingSet(), s.getTrainingLabels(), sLDA);
+					//		accuracy("Daehr-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), sLDA);
 
-							sRDA = new PDLassoRDA(ss.getTrainingSet(), ss.getTrainingLabels(),alpha);
-							accuracy("DDaehr-" + Estimator.lambda, ss.getTestingSet(), ss.getTestingLabels(), sRDA);
+					//		sLDA = new PDLassoLDA(ss.getTrainingSet(), ss.getTrainingLabels());
+					//		accuracy("DDaehr-" + Estimator.lambda, ss.getTestingSet(), ss.getTestingLabels(), sLDA);
+					//	}
+						
+						Estimator.lambda=0.5;
+						for (int ir = 0; ir < 20; ir++) {
+							Estimator.lambda *= 0.5;
+
+							DaehrLDA sLDA = new DaehrLDA(s.getTrainingSet(), s.getTrainingLabels(),false);
+					//		accuracy("training Daehr-" + Estimator.lambda, s.getTrainingSet(), s.getTrainingLabels(), sLDA);
+							accuracy("Daehr-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), sLDA);
+
+					//		sLDA = new PDLassoLDA(ss.getTrainingSet(), ss.getTrainingLabels());
+					//		accuracy("DDaehr-" + Estimator.lambda, ss.getTestingSet(), ss.getTestingLabels(), sLDA);
 						}
+
+						
+						while (ShrinkageLDA.slambda>=0) {
+							ShLDA shLDA =new ShLDA(s.getTrainingSet(), s.getTrainingLabels(),false);
+					//		accuracy("training Shrinkage-" + ShrinkageLDA.slambda, s.getTrainingSet(), s.getTrainingLabels(), sELDA);
+							accuracy("Shrinkage-" + ShrinkageLDA.slambda, s.getTestingSet(), s.getTestingLabels(), shLDA);
+							ShrinkageLDA.slambda -=0.25;
+						}
+
 					}
 
 				}
-			}
+		//	}
 		}
 
 	}
