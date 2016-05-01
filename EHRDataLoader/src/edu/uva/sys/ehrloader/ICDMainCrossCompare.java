@@ -10,8 +10,10 @@ import edu.uva.hdstats.Estimator;
 import edu.uva.hdstats.da.AdaboostClassifier;
 import edu.uva.hdstats.da.Classifier;
 import edu.uva.hdstats.da.DaehrLDA;
+import edu.uva.hdstats.da.GLassoLDA;
 import edu.uva.hdstats.da.LDA;
 import edu.uva.hdstats.da.LRClassifier;
+import edu.uva.hdstats.da.NonSparseLDA;
 import edu.uva.hdstats.da.ODaehrLDA;
 import edu.uva.hdstats.da.OLDA;
 import edu.uva.hdstats.da.OrgLDA;
@@ -68,73 +70,100 @@ public class ICDMainCrossCompare {
 		ps.println("dates: " + base.getDates().size());
 
 		double[][] fm = base.getFrequencyMatrix();
-	//	HashMap<Integer, Set<Integer>> missingcodes = new HashMap<Integer, Set<Integer>>();
+		// HashMap<Integer, Set<Integer>> missingcodes = new HashMap<Integer,
+		// Set<Integer>>();
 
 		System.out.println("matrix " + fm.length + " x " + fm[0].length);
-	//	ps.println("using NMF 10");
-	//	double[][] recoveredData = dataRecovery(new NMFRecovery(10), fm, fm, missingcodes, 0);
+		// ps.println("using NMF 10");
+		// double[][] recoveredData = dataRecovery(new NMFRecovery(10), fm, fm,
+		// missingcodes, 0);
 
-		for (int t = 250; t <= 250; t += 200) {
-		//	for (int te = 100; te <= 500; te += 100) {
-				for (int days = 30; days <= 30; days += 30) {
-					t_size = t;
-					te_size = 1000;
-					try {
-						ps = new PrintStream("/Users/bertrandx/Box Sync/CHSN_pattern mining/Jinghe/accuracy-cross-"
-								+ t_size + "-" + te_size + "-" + days + ".txt");
-					} catch (FileNotFoundException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+		for (int t = 100; t <= 1000; t += 300) {
+			// for (int te = 100; te <= 500; te += 100) {
+			for (int days = 30; days <= 30; days += 30) {
+				t_size = t;
+				te_size = 1000;
+				try {
+					ps = new PrintStream("/Users/bertrandx/Box Sync/CHSN_pattern mining/Jinghe/accuracy-cross-" + t_size
+							+ "-" + te_size + "-" + days + ".txt");
+				} catch (FileNotFoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+
+				for (int r = 0; r < 10; r++) {
+				//	Estimator.lambda = 0.005 * 0.25;
+
+					BalanceTTSelection s = new BalanceTTSelection(fm, base.getLabels(), t_size, te_size);
+					s.select();
+
+					long t1 = System.currentTimeMillis();
+					OLDA LDA = new OLDA(s.getTrainingSet(), s.getTrainingLabels(), false);
+					long t2 = System.currentTimeMillis();
+					accuracy("LDA", s.getTestingSet(), s.getTestingLabels(), LDA, t1, t2);
+
+					for (double slambda = 0.25; slambda < 1; slambda += 0.25) {
+						ShrinkageLDA.slambda = slambda;
+						t1 = System.currentTimeMillis();
+						ShrinkageLDA sLDA = new ShrinkageLDA(s.getTrainingSet(), s.getTrainingLabels());
+						t2 = System.currentTimeMillis();
+						accuracy("Shrinkage-" + ShrinkageLDA.slambda, s.getTestingSet(), s.getTestingLabels(), sLDA, t1,
+								t2);
 					}
-
-					for (int r = 0; r < 30; r++) {
-						ShrinkageLDA.slambda  = 0.75;
-						Estimator.lambda=0.005*0.25;
-
-						BalanceTTSelection s = new BalanceTTSelection(fm, base.getLabels(), t_size, te_size);
-						s.select();
-						
-						long t1=System.currentTimeMillis();
-						OLDA LDA = new  OLDA(s.getTrainingSet(), s.getTrainingLabels(),false);
-						long t2=System.currentTimeMillis();
-						accuracy("LDA", s.getTestingSet(), s.getTestingLabels(), LDA,t1,t2);
-						
-						t1=System.currentTimeMillis();
-						ODaehrLDA oLDA = new ODaehrLDA(s.getTrainingSet(), s.getTrainingLabels(),false);
-						t2=System.currentTimeMillis();
-						accuracy("Daehr-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), oLDA,t1,t2);
-
-						t1=System.currentTimeMillis();
-						SVMClassifier svm = new SVMClassifier(s.getTrainingSet(), s.getTrainingLabels());
-						t2=System.currentTimeMillis();
-						accuracy("SVM", s.getTestingSet(), s.getTestingLabels(), svm,t1,t2);
-						
-						t1=System.currentTimeMillis();
-						LRClassifier lr = new LRClassifier(s.getTrainingSet(), s.getTrainingLabels());
-						t2=System.currentTimeMillis();
-						accuracy("LR", s.getTestingSet(), s.getTestingLabels(), lr,t1,t2);
-						
-						t1=System.currentTimeMillis();
-						AdaboostClassifier ab = new AdaboostClassifier(s.getTrainingSet(), s.getTrainingLabels(),10);
-						t2=System.currentTimeMillis();
-						accuracy("AB-10", s.getTestingSet(), s.getTestingLabels(), ab,t1,t2);
-						
-						t1=System.currentTimeMillis();
-						ab = new AdaboostClassifier(s.getTrainingSet(), s.getTrainingLabels(),50);
-						t2=System.currentTimeMillis();
-						accuracy("AB-50", s.getTestingSet(), s.getTestingLabels(), ab,t1,t2);
-
-
-
+					for (double lambda = 0.01; lambda <= 0.1; lambda += 0.03) {
+						Estimator.lambda=lambda;
+						t1 = System.currentTimeMillis();
+						ODaehrLDA oLDA = new ODaehrLDA(s.getTrainingSet(), s.getTrainingLabels(), false);
+						t2 = System.currentTimeMillis();
+						accuracy("SparseCov-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), oLDA, t1, t2);
 					}
+					
+					for (double lambda = 0.01; lambda <= 0.1; lambda += 0.03) {
+						Estimator.lambda=lambda;
+						t1 = System.currentTimeMillis();
+						GLassoLDA oLDA = new GLassoLDA(s.getTrainingSet(), s.getTrainingLabels(), false);
+						t2 = System.currentTimeMillis();
+						accuracy("GLasso-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), oLDA, t1, t2);
+					}
+					
+					for (double lambda = 0.01; lambda <= 0.1; lambda += 0.03) {
+						Estimator.lambda=lambda;
+						t1 = System.currentTimeMillis();
+						NonSparseLDA oLDA = new NonSparseLDA(s.getTrainingSet(), s.getTrainingLabels(), false);
+						t2 = System.currentTimeMillis();
+						accuracy("NonSparse-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), oLDA, t1, t2);
+					}
+					
+					t1 = System.currentTimeMillis();
+					SVMClassifier svm = new SVMClassifier(s.getTrainingSet(), s.getTrainingLabels());
+					t2 = System.currentTimeMillis();
+					accuracy("SVM", s.getTestingSet(), s.getTestingLabels(), svm, t1, t2);
+
+					t1 = System.currentTimeMillis();
+					LRClassifier lr = new LRClassifier(s.getTrainingSet(), s.getTrainingLabels());
+					t2 = System.currentTimeMillis();
+					accuracy("LR", s.getTestingSet(), s.getTestingLabels(), lr, t1, t2);
+
+					t1 = System.currentTimeMillis();
+					AdaboostClassifier ab = new AdaboostClassifier(s.getTrainingSet(), s.getTrainingLabels(), 10);
+					t2 = System.currentTimeMillis();
+					accuracy("AB-10", s.getTestingSet(), s.getTestingLabels(), ab, t1, t2);
+
+					t1 = System.currentTimeMillis();
+					ab = new AdaboostClassifier(s.getTrainingSet(), s.getTrainingLabels(), 50);
+					t2 = System.currentTimeMillis();
+					accuracy("AB-50", s.getTestingSet(), s.getTestingLabels(), ab, t1, t2);
 
 				}
-		//	}
+
+			}
+			// }
 		}
 
 	}
 
-	private static void accuracy(String name, double[][] data, int[] labels, Classifier<double[]> classifier, long t1, long t2) {
+	private static void accuracy(String name, double[][] data, int[] labels, Classifier<double[]> classifier, long t1,
+			long t2) {
 		// int[] plabels=new int[labels.length];
 		System.out.println("accuracy statistics");
 		int tp = 0, fp = 0, tn = 0, fn = 0;
@@ -151,9 +180,9 @@ public class ICDMainCrossCompare {
 			}
 
 		}
-		long train_time=t2-t1;
-		double test_time=((double)(System.currentTimeMillis()-t2))/((double)labels.length);
-		ps.println(name + "\t" + tp + "\t" + tn + "\t" + fp + "\t" + fn+"\t"+train_time+"\t"+test_time);
+		long train_time = t2 - t1;
+		double test_time = ((double) (System.currentTimeMillis() - t2)) / ((double) labels.length);
+		ps.println(name + "\t" + tp + "\t" + tn + "\t" + fp + "\t" + fn + "\t" + train_time + "\t" + test_time);
 
 	}
 
