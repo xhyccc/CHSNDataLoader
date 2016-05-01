@@ -8,6 +8,7 @@ import java.util.HashMap;
 public class EHRRecordMap {
 	
 	public HashMap<String,String> codeMap=new HashMap<String,String>();
+	public HashMap<String,String> nameMap=new HashMap<String,String>();
 	
 	public EHRRecordMap(String fpath){
 		try {
@@ -15,6 +16,9 @@ public class EHRRecordMap {
 			String ln=br.readLine();
 			while(ln!=null){
 				String cname=ln.split(" ")[0];
+				nameMap.put(cname, ln.replaceAll(" ","_"));
+				System.out.println(cname+"\t"+nameMap.get(cname));
+
 				ln=br.readLine();
 				String[] codes=ln.split(" ");
 				for(String code:codes){

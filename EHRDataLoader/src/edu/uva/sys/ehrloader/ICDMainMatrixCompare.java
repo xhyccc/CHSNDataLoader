@@ -7,20 +7,24 @@ import java.util.HashSet;
 import java.util.Set;
 
 import edu.uva.hdstats.Estimator;
+import edu.uva.hdstats.da.AdaboostClassifier;
 import edu.uva.hdstats.da.Classifier;
 import edu.uva.hdstats.da.DaehrLDA;
 import edu.uva.hdstats.da.LDA;
+import edu.uva.hdstats.da.LRClassifier;
 import edu.uva.hdstats.da.ODaehrLDA;
 import edu.uva.hdstats.da.OLDA;
 import edu.uva.hdstats.da.OrgLDA;
 import edu.uva.hdstats.da.PDLassoLDA;
+import edu.uva.hdstats.da.SVMClassifier;
 import edu.uva.hdstats.da.ShLDA;
 import edu.uva.hdstats.da.ShrinkageLDA;
+import edu.uva.hdstats.da.mDaehrLDA;
 import edu.uva.libopt.numeric.*;
 import edu.uva.sys.ehrloader.ml.BalanceTTSelection;
 import edu.uva.sys.ehrloader.recovery.*;
 
-public class ICDMainOLDA {
+public class ICDMainMatrixCompare {
 
 	public static PrintStream ps = null;
 	public static int t_size = 400;
@@ -65,89 +69,72 @@ public class ICDMainOLDA {
 		ps.println("dates: " + base.getDates().size());
 
 		double[][] fm = base.getFrequencyMatrix();
-	//	HashMap<Integer, Set<Integer>> missingcodes = new HashMap<Integer, Set<Integer>>();
+		// HashMap<Integer, Set<Integer>> missingcodes = new HashMap<Integer,
+		// Set<Integer>>();
 
 		System.out.println("matrix " + fm.length + " x " + fm[0].length);
-	//	ps.println("using NMF 10");
-	//	double[][] recoveredData = dataRecovery(new NMFRecovery(10), fm, fm, missingcodes, 0);
+		// ps.println("using NMF 10");
+		// double[][] recoveredData = dataRecovery(new NMFRecovery(10), fm, fm,
+		// missingcodes, 0);
 
-		for (int t = 300; t <= 300; t += 100) {
-		//	for (int te = 100; te <= 500; te += 100) {
-				for (int days = 30; days <= 90; days += 30) {
-					t_size = t;
-					te_size = 1000;
-					try {
-						ps = new PrintStream("/Users/bertrandx/Box Sync/CHSN_pattern mining/Jinghe/accuracy-oLDA-"
-								+ t_size + "-" + te_size + "-" + days + ".txt");
-					} catch (FileNotFoundException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
+		// for (int t = 50; t <= 250; t += 200) {
+		// for (int te = 100; te <= 500; te += 100) {
+		for (int days = 30; days <= 30; days += 30) {
+			// t_size = t;
+			te_size = 1000;
+			try {
+				ps = new PrintStream("/Users/bertrandx/Box Sync/CHSN_pattern mining/Jinghe/accuracy-matrix.txt");
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 
-					for (int r = 0; r < 30; r++) {
-						ShrinkageLDA.slambda  = 0.75;
-						Estimator.lambda=0.005;
+			for (int r = 0; r < 30; r++) {
+				BalanceTTSelection s1 = new BalanceTTSelection(fm, base.getLabels(), 50, 10);
+				s1.select();
 
-						BalanceTTSelection s = new BalanceTTSelection(fm, base.getLabels(), t_size, te_size);
-						s.select();
-				//		BalanceTTSelection ss = new BalanceTTSelection(recoveredData, base.getLabels(), t_size,
-				//				te_size);
-				//		ss.select(s.trainIndex, s.testIndex);
+				mDaehrLDA LDA = new mDaehrLDA(s1.getTrainingSet(), s1.getTrainingLabels(), false);
+				mDaehrLDA oLDA = new mDaehrLDA(s1.getTrainingSet(), s1.getTrainingLabels(), false);
 
-						OLDA LDA = new  OLDA(s.getTrainingSet(), s.getTrainingLabels(),false);
-					//	DaehrLDA sLDA = new DaehrLDA(s.getTrainingSet(), s.getTrainingLabels(),false);
-					//	LDA = new LDA(ss.getTrainingSet(), ss.getTrainingLabels());
-					//	sLDA = new PDLassoLDA(ss.getTrainingSet(), ss.getTrainingLabels());
-					//	accuracy("training LDA", s.getTrainingSet(), s.getTrainingLabels(), LDA);
-						accuracy("LDA", s.getTestingSet(), s.getTestingLabels(), LDA);
-					//	accuracy("recoveredLDA", ss.getTestingSet(), ss.getTestingLabels(), LDA);
-					//	accuracy("training Daehr-" + Estimator.lambda, s.getTrainingSet(), s.getTrainingLabels(), sLDA);
-					//	accuracy("Daehr-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), sLDA);
-					//	accuracy("DDaehr-" + Estimator.lambda, ss.getTestingSet(), ss.getTestingLabels(), sLDA);
-					//	for (int ir = 0; ir < 10; ir++) {
-					//		Estimator.lambda -= 0.001;
+				BalanceTTSelection ss = new BalanceTTSelection(fm, base.getLabels(), 10000, te_size);
+				ss.select();
+				mDaehrLDA large = new mDaehrLDA(ss.getTrainingSet(), ss.getTrainingLabels(), false);
 
-					//	sLDA = new PDLassoLDA(s.getTrainingSet(), s.getTrainingLabels());
-					//		accuracy("training Daehr-" + Estimator.lambda, s.getTrainingSet(), s.getTrainingLabels(), sLDA);
-					//		accuracy("Daehr-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), sLDA);
+				double[][][] covLDA = LDA.getSampleCovarianceMatrix();
+				double[][][] covDaehr = oLDA.getSparseCovarianceMatrx();
+				double[][][] covLarge = large.getSampleCovarianceMatrix();
 
-					//		sLDA = new PDLassoLDA(ss.getTrainingSet(), ss.getTrainingLabels());
-					//		accuracy("DDaehr-" + Estimator.lambda, ss.getTestingSet(), ss.getTestingLabels(), sLDA);
-					//	}
-						
-						for (int ir = 0; ir < 10; ir++) {
+				plotAccuracy("sample-50+", covLDA[0], covLarge[0]);
+				plotAccuracy("sample-50-", covLDA[1], covLarge[1]);
 
-					//		DaehrLDA sLDA = new DaehrLDA(s.getTrainingSet(), s.getTrainingLabels(),false);
-							ODaehrLDA oLDA = new ODaehrLDA(s.getTrainingSet(), s.getTrainingLabels(),false);
-
-					//		accuracy("training Daehr-" + Estimator.lambda, s.getTrainingSet(), s.getTrainingLabels(), sLDA);
-					//		accuracy("Daehr-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), sLDA);
-							accuracy("Daehr-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), oLDA);
-
-					//		sLDA = new PDLassoLDA(ss.getTrainingSet(), ss.getTrainingLabels());
-					//		accuracy("DDaehr-" + Estimator.lambda, ss.getTestingSet(), ss.getTestingLabels(), sLDA);
-							
-							Estimator.lambda *= 0.5;
-
-						}
-
-						
-						while (ShrinkageLDA.slambda>=0) {
-							ShLDA shLDA =new ShLDA(s.getTrainingSet(), s.getTrainingLabels(),false);
-					//		accuracy("training Shrinkage-" + ShrinkageLDA.slambda, s.getTrainingSet(), s.getTrainingLabels(), sELDA);
-							accuracy("Shrinkage-" + ShrinkageLDA.slambda, s.getTestingSet(), s.getTestingLabels(), shLDA);
-							ShrinkageLDA.slambda -=0.25;
-						}
-
-					}
-
+				Estimator.lambda = 0.005 * 0.25;
+				for (int i = 0; i < 5; i++) {
+					oLDA = new mDaehrLDA(s1.getTrainingSet(), s1.getTrainingLabels(), false);
+					covDaehr = oLDA.getSparseCovarianceMatrx();
+					plotAccuracy("daehr-" + Estimator.lambda + "+", covDaehr[0], covLarge[0]);
+					plotAccuracy("daehr-" + Estimator.lambda + "-", covDaehr[1], covLarge[1]);
+					Estimator.lambda *= 0.5;
 				}
-		//	}
-		}
 
+				mDaehrLDA.slambda = 0.75;
+				for (int i = 0; i < 4; i++) {
+					oLDA = new mDaehrLDA(s1.getTrainingSet(), s1.getTrainingLabels(), false);
+					covDaehr = oLDA.getShrinkagedCovarianceMatrx();
+					plotAccuracy("shrinkage-"+mDaehrLDA.slambda+"+", covDaehr[0], covLarge[0]);
+					plotAccuracy("shrinkage-"+mDaehrLDA.slambda+"-", covDaehr[1], covLarge[1]);
+					mDaehrLDA.slambda -=0.25;
+				}
+
+			}
+
+		}
+		// }
 	}
 
-	private static void accuracy(String name, double[][] data, int[] labels, Classifier<double[]> classifier) {
+	// }
+
+	private static void accuracy(String name, double[][] data, int[] labels, Classifier<double[]> classifier, long t1,
+			long t2) {
 		// int[] plabels=new int[labels.length];
 		System.out.println("accuracy statistics");
 		int tp = 0, fp = 0, tn = 0, fn = 0;
@@ -164,7 +151,9 @@ public class ICDMainOLDA {
 			}
 
 		}
-		ps.println(name + "\t" + tp + "\t" + tn + "\t" + fp + "\t" + fn);
+		long train_time = t2 - t1;
+		double test_time = ((double) (System.currentTimeMillis() - t2)) / ((double) labels.length);
+		ps.println(name + "\t" + tp + "\t" + tn + "\t" + fp + "\t" + fn + "\t" + train_time + "\t" + test_time);
 
 	}
 
@@ -236,38 +225,13 @@ public class ICDMainOLDA {
 		return fm3;
 	}
 
-	private static void plotAccuracy(double[][] fm, double[][] fm2, HashMap<Integer, Set<Integer>> missingcodes,
-			int sum_miss_codes, double[][] fm3, int sum_recover_codes, double threshold) {
-		HashMap<Integer, Set<Integer>> recoverycodes = new HashMap<Integer, Set<Integer>>();
+	private static void plotAccuracy(String name, double[][] fm, double[][] fm2) {
 
-		for (int i = 0; i < fm.length; i++) {
-			for (int j = 0; j < fm[i].length; j++) {
-				if (fm2[i][j] == 0 && fm3[i][j] > threshold) {
-					sum_recover_codes++;
-					if (!recoverycodes.containsKey(i))
-						recoverycodes.put(i, new HashSet<Integer>());
-					recoverycodes.get(i).add(j);
+		double err_l1 = Utils.normalizedErrorL1(Utils.getCorrelationMatrix(fm2), Utils.getCorrelationMatrix(fm), 0);
+		double err_l2 = Utils.normalizedErrorL2(Utils.getCorrelationMatrix(fm2), Utils.getCorrelationMatrix(fm), 0);
 
-				}
-			}
-		}
-
-		int intersection = intersection(missingcodes, recoverycodes);
-		double precision = (double) intersection / (double) sum_recover_codes;
-		double recall = (double) intersection / (double) sum_miss_codes;
-		double f1 = 2 * precision * recall / (precision + recall);
-		double err_l1 = Utils.normalizedErrorL1Recovery(fm, fm2, fm3, threshold);
-		double err_l2 = Utils.normalizedErrorL2Recovery(fm, fm2, fm3, threshold);
-
-		ps.print(threshold);
-		ps.print("," + sum_miss_codes);
-		ps.print("," + sum_recover_codes);
-		ps.print("," + intersection);
-		ps.print("," + f1);
-		ps.print("," + precision);
-		ps.print("," + recall);
-		ps.print("," + err_l1);
-		ps.println("," + err_l2);
+		ps.print(name + "\t" + err_l1);
+		ps.println("\t" + err_l2);
 
 	}
 

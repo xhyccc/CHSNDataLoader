@@ -4,7 +4,7 @@ import java.io.FileNotFoundException;
 import java.io.PrintStream;
 import java.util.List;
 
-public class DataOutput {
+public class DataOutput2 {
 
 	public static void saveFile(EHRecordBase base, EHRRecordMap map, double[][] matrix, String fpath) {
 		try {
@@ -65,16 +65,19 @@ public class DataOutput {
 	public static void main(String[] args) {
 		EHRRecordMap map = new EHRRecordMap("/Users/bertrandx/Box Sync/CHSN_pattern mining/Jinghe/mapping.txt");
 
-		EHRecordBase base = ICDLineReader.load(map,
-				"/Users/bertrandx/Box Sync/CHSN_pattern mining/Jinghe/non-mh_icd.csv", "x_icdcode", 30000);
+		EHRecordBase base = ICDLineReader2.load(
+				"/Users/bertrandx/Box Sync/CHSN_pattern mining/Jinghe/non-mh_icd.csv", "x_icdcode", 300000000);
 
-		EHRecordBase base_2 = ICDLineReader.load(map, "/Users/bertrandx/Box Sync/CHSN_pattern mining/Jinghe/icd_MD.csv",
-				"y_icdcode", 30000);
+		EHRecordBase base_2 = ICDLineReader2.load("/Users/bertrandx/Box Sync/CHSN_pattern mining/Jinghe/icd_MD.csv",
+				"y_icdcode", 300000000);
+
+		base.setLabelsForAllPatients(0);
+		base_2.setLabelsForAllPatients(1);
 
 		base.insertRecords(base_2);
-		base.setPositiveLabel(MHCode.codes);
-		base.removeVisitsAfter(MHCode.codes, 30);
-		base.removePatientLessNVisit(3);
+	//	base.setPositiveLabel(MHCode.codes);
+	//	base.removeVisitsAfter(MHCode.codes, 30);
+	//	base.removePatientLessNVisit(3);
 
 		double[][] fm = base.getBinaryMatrix();
 		System.out.println("matrix " + fm.length + " x " + fm[0].length);
