@@ -90,36 +90,52 @@ public class ICDMainMatrixCompare {
 			}
 
 			for (int r = 0; r < 30; r++) {
-				BalanceTTSelection s1 = new BalanceTTSelection(fm, base.getLabels(), 50, 10);
+				BalanceTTSelection s1 = new BalanceTTSelection(fm, base.getLabels(), 100, 10);
 				s1.select();
 
 				mDaehrLDA LDA = new mDaehrLDA(s1.getTrainingSet(), s1.getTrainingLabels(), false);
-				mDaehrLDA oLDA = new mDaehrLDA(s1.getTrainingSet(), s1.getTrainingLabels(), false);
+				mDaehrLDA sparseLDA = new mDaehrLDA(s1.getTrainingSet(), s1.getTrainingLabels(), false);
+				mDaehrLDA glassoLDA = new mDaehrLDA(s1.getTrainingSet(), s1.getTrainingLabels(), false);
+				mDaehrLDA nonSparseLDA = new mDaehrLDA(s1.getTrainingSet(), s1.getTrainingLabels(), false);
 
 				BalanceTTSelection ss = new BalanceTTSelection(fm, base.getLabels(), 10000, te_size);
 				ss.select();
 				mDaehrLDA large = new mDaehrLDA(ss.getTrainingSet(), ss.getTrainingLabels(), false);
 
 				double[][][] covLDA = LDA.getSampleCovarianceMatrix();
-				double[][][] covDaehr = oLDA.getSparseCovarianceMatrx();
+				double[][][] covDaehr = sparseLDA.getSparseCovarianceMatrx();
+				double[][][] covGlasso = sparseLDA.getGLassoCovarianceMatrx();
+				double[][][] covNonSparse = sparseLDA.getNonSparseCovarianceMatrx();
 				double[][][] covLarge = large.getSampleCovarianceMatrix();
 
-				plotAccuracy("sample-50+", covLDA[0], covLarge[0]);
-				plotAccuracy("sample-50-", covLDA[1], covLarge[1]);
+				plotAccuracy("sample-100+", covLDA[0], covLarge[0]);
+				plotAccuracy("sample-100-", covLDA[1], covLarge[1]);
 
-				Estimator.lambda = 0.005 * 0.25;
-				for (int i = 0; i < 5; i++) {
-					oLDA = new mDaehrLDA(s1.getTrainingSet(), s1.getTrainingLabels(), false);
-					covDaehr = oLDA.getSparseCovarianceMatrx();
-					plotAccuracy("daehr-" + Estimator.lambda + "+", covDaehr[0], covLarge[0]);
-					plotAccuracy("daehr-" + Estimator.lambda + "-", covDaehr[1], covLarge[1]);
-					Estimator.lambda *= 0.5;
+				Estimator.lambda = 100;
+				for (int i = 0; i < 6; i++) {
+					sparseLDA = new mDaehrLDA(s1.getTrainingSet(), s1.getTrainingLabels(), false);
+					covDaehr = sparseLDA.getSparseCovarianceMatrx();
+					covGlasso = sparseLDA.getGLassoCovarianceMatrx();
+					covNonSparse = sparseLDA.getNonSparseCovarianceMatrx();
+
+					plotAccuracy("sparse-" + Estimator.lambda + "+", covDaehr[0], covLarge[0]);
+					plotAccuracy("sparse-" + Estimator.lambda + "-", covDaehr[1], covLarge[1]);
+					
+					plotAccuracy("glasso-" + Estimator.lambda + "+", covGlasso[0], covLarge[0]);
+					plotAccuracy("glasso-" + Estimator.lambda + "-", covGlasso[1], covLarge[1]);
+
+					plotAccuracy("nonsparse-" + Estimator.lambda + "+", covNonSparse[0], covLarge[0]);
+					plotAccuracy("nonsparse-" + Estimator.lambda + "-", covNonSparse[1], covLarge[1]);
+
+					
+					
+					Estimator.lambda *= 0.1;
 				}
 
 				mDaehrLDA.slambda = 0.75;
 				for (int i = 0; i < 4; i++) {
-					oLDA = new mDaehrLDA(s1.getTrainingSet(), s1.getTrainingLabels(), false);
-					covDaehr = oLDA.getShrinkagedCovarianceMatrx();
+					sparseLDA = new mDaehrLDA(s1.getTrainingSet(), s1.getTrainingLabels(), false);
+					covDaehr = sparseLDA.getShrinkagedCovarianceMatrx();
 					plotAccuracy("shrinkage-"+mDaehrLDA.slambda+"+", covDaehr[0], covLarge[0]);
 					plotAccuracy("shrinkage-"+mDaehrLDA.slambda+"-", covDaehr[1], covLarge[1]);
 					mDaehrLDA.slambda -=0.25;

@@ -78,7 +78,7 @@ public class ICDMainCrossCompare {
 		// double[][] recoveredData = dataRecovery(new NMFRecovery(10), fm, fm,
 		// missingcodes, 0);
 
-		for (int t = 100; t <= 1000; t += 300) {
+		for (int t = 50; t <= 250; t += 50) {
 			// for (int te = 100; te <= 500; te += 100) {
 			for (int days = 30; days <= 30; days += 30) {
 				t_size = t;
@@ -102,7 +102,7 @@ public class ICDMainCrossCompare {
 					long t2 = System.currentTimeMillis();
 					accuracy("LDA", s.getTestingSet(), s.getTestingLabels(), LDA, t1, t2);
 
-					for (double slambda = 0.25; slambda < 1; slambda += 0.25) {
+					for (double slambda = 0.0; slambda < 1; slambda += 0.25) {
 						ShrinkageLDA.slambda = slambda;
 						t1 = System.currentTimeMillis();
 						ShrinkageLDA sLDA = new ShrinkageLDA(s.getTrainingSet(), s.getTrainingLabels());
@@ -110,7 +110,7 @@ public class ICDMainCrossCompare {
 						accuracy("Shrinkage-" + ShrinkageLDA.slambda, s.getTestingSet(), s.getTestingLabels(), sLDA, t1,
 								t2);
 					}
-					for (double lambda = 0.01; lambda <= 0.1; lambda += 0.03) {
+					for (double lambda = 10000; lambda > 0.0001; lambda*=0.1) {
 						Estimator.lambda=lambda;
 						t1 = System.currentTimeMillis();
 						ODaehrLDA oLDA = new ODaehrLDA(s.getTrainingSet(), s.getTrainingLabels(), false);
@@ -118,7 +118,7 @@ public class ICDMainCrossCompare {
 						accuracy("SparseCov-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), oLDA, t1, t2);
 					}
 					
-					for (double lambda = 0.01; lambda <= 0.1; lambda += 0.03) {
+					for (double lambda = 10000; lambda > 0.0001; lambda*=0.1) {
 						Estimator.lambda=lambda;
 						t1 = System.currentTimeMillis();
 						GLassoLDA oLDA = new GLassoLDA(s.getTrainingSet(), s.getTrainingLabels(), false);
@@ -126,7 +126,7 @@ public class ICDMainCrossCompare {
 						accuracy("GLasso-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), oLDA, t1, t2);
 					}
 					
-					for (double lambda = 0.01; lambda <= 0.1; lambda += 0.03) {
+					for (double lambda = 10000; lambda > 0.0001; lambda*=0.1) {
 						Estimator.lambda=lambda;
 						t1 = System.currentTimeMillis();
 						NonSparseLDA oLDA = new NonSparseLDA(s.getTrainingSet(), s.getTrainingLabels(), false);
