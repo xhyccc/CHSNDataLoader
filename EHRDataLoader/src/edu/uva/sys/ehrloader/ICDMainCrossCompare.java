@@ -45,12 +45,12 @@ public class ICDMainCrossCompare {
 
 		ps = System.out;
 
-		EHRRecordMap map = new EHRRecordMap("/Users/bertrandx/Box Sync/CHSN_pattern mining/Jinghe/mapping.txt");
+		EHRRecordMap map = new EHRRecordMap("/Users/xiongha/Box Sync/CHSN_pattern mining/Jinghe/mapping.txt");
 
 		EHRecordBase base = ICDLineReader.load(map,
-				"/Users/bertrandx/Box Sync/CHSN_pattern mining/Jinghe/non-mh_icd.csv", "x_icdcode", 300000);
+				"/Users/xiongha/Box Sync/CHSN_pattern mining/Jinghe/non-mh_icd.csv", "x_icdcode", 300000);
 
-		EHRecordBase base_2 = ICDLineReader.load(map, "/Users/bertrandx/Box Sync/CHSN_pattern mining/Jinghe/icd_MD.csv",
+		EHRecordBase base_2 = ICDLineReader.load(map, "/Users/xiongha/Box Sync/CHSN_pattern mining/Jinghe/icd_MD.csv",
 				"y_icdcode", 300000);
 
 		// base_2.removeVisitsAfter(MHCode.codes);
@@ -84,7 +84,7 @@ public class ICDMainCrossCompare {
 				t_size = t;
 				te_size = 1000;
 				try {
-					ps = new PrintStream("/Users/bertrandx/Box Sync/CHSN_pattern mining/Jinghe/accuracy-cross-" + t_size
+					ps = new PrintStream("/Users/xiongha/Box Sync/CHSN_pattern mining/Jinghe/accuracy-cross-" + t_size
 							+ "-" + te_size + "-" + days + ".txt");
 				} catch (FileNotFoundException e) {
 					// TODO Auto-generated catch block

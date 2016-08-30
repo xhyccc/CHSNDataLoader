@@ -102,7 +102,7 @@ public class ICDMainMatrixCompare {
 				ss.select();
 				mDaehrLDA large = new mDaehrLDA(ss.getTrainingSet(), ss.getTrainingLabels(), false);
 
-				double[][][] covLDA = LDA.getSampleCovarianceMatrix();
+				double[][][] covLDA = LDA.getSamplePrecisionMatrx();
 				double[][][] covDaehr = sparseLDA.getSparseCovarianceMatrx();
 				double[][][] covGlasso = sparseLDA.getGLassoCovarianceMatrx();
 				double[][][] covNonSparse = sparseLDA.getNonSparseCovarianceMatrx();
