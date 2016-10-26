@@ -1,5 +1,7 @@
 package edu.uva.sys.ehrloader;
 
+
+
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
 import java.util.HashMap;
@@ -10,10 +12,8 @@ import edu.uva.hdstats.Estimator;
 import edu.uva.hdstats.da.AdaboostClassifier;
 import edu.uva.hdstats.da.Classifier;
 import edu.uva.hdstats.da.DaehrLDA;
-import edu.uva.hdstats.da.GLassoLDA;
 import edu.uva.hdstats.da.LDA;
 import edu.uva.hdstats.da.LRClassifier;
-import edu.uva.hdstats.da.NonSparseLDA;
 import edu.uva.hdstats.da.ODaehrLDA;
 import edu.uva.hdstats.da.OLDA;
 import edu.uva.hdstats.da.OrgLDA;
@@ -21,11 +21,12 @@ import edu.uva.hdstats.da.PDLassoLDA;
 import edu.uva.hdstats.da.SVMClassifier;
 import edu.uva.hdstats.da.ShLDA;
 import edu.uva.hdstats.da.ShrinkageLDA;
+import edu.uva.hdstats.da.mDaehrLDA;
 import edu.uva.libopt.numeric.*;
 import edu.uva.sys.ehrloader.ml.BalanceTTSelection;
 import edu.uva.sys.ehrloader.recovery.*;
 
-public class ICDMainCrossCompare {
+public class MatrixCompare {
 
 	public static PrintStream ps = null;
 	public static int t_size = 400;
@@ -78,89 +79,76 @@ public class ICDMainCrossCompare {
 		// double[][] recoveredData = dataRecovery(new NMFRecovery(10), fm, fm,
 		// missingcodes, 0);
 
-		for (int t = 150; t <= 1000; t += 200) {
-			 for (int te = 500; te <= 2000; te += 500) {
-			for (int days = 30; days <= 90; days += 30) {
-				t_size = t;
-				te_size = te;
-				try {
-					ps = new PrintStream("/Users/xiongha/Box Sync/CHSN_pattern mining/Jinghe/accuracy-cross-" + t_size
-							+ "-" + te_size + "-" + days + ".txt");
-				} catch (FileNotFoundException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+		// for (int t = 50; t <= 250; t += 200) {
+		// for (int te = 100; te <= 500; te += 100) {
+		for (int days = 30; days <= 30; days += 30) {
+			// t_size = t;
+			te_size = 1000;
+			try {
+				ps = new PrintStream("/Users/xiongha/Box Sync/CHSN_pattern mining/Jinghe/error-precision-matrix－200.txt");
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+			for (int r = 0; r < 30; r++) {
+				BalanceTTSelection s1 = new BalanceTTSelection(fm, base.getLabels(), 200, 10);
+				s1.select();
+
+				mDaehrLDA LDA = new mDaehrLDA(s1.getTrainingSet(), s1.getTrainingLabels(), false);
+				mDaehrLDA sparseLDA = new mDaehrLDA(s1.getTrainingSet(), s1.getTrainingLabels(), false);
+				mDaehrLDA glassoLDA = new mDaehrLDA(s1.getTrainingSet(), s1.getTrainingLabels(), false);
+				mDaehrLDA nonSparseLDA = new mDaehrLDA(s1.getTrainingSet(), s1.getTrainingLabels(), false);
+
+				BalanceTTSelection ss = new BalanceTTSelection(fm, base.getLabels(), 10000, te_size);
+				ss.select();
+				mDaehrLDA large = new mDaehrLDA(ss.getTrainingSet(), ss.getTrainingLabels(), false);
+
+				double[][]	covLDA = LDA.getSamplePrecisionMatrix();
+				double[][] covDaehr = sparseLDA.getSparseCovPrecisionMatrx();
+				double[][] covGlasso = glassoLDA.getGLassoPrecisionMatrx();
+				double[][] covNonSparse = nonSparseLDA.getNonSparsePrecisionMatrx();
+				double[][] covLarge = large.getSamplePrecisionMatrix();
+
+				plotAccuracy("sample", covLDA, covLarge);
+			//	plotAccuracy("sample-100-", covLDA[1], covLarge[1]);
+
+				Estimator.lambda = 10000;
+				for (int i = 0; i < 6; i++) {
+					sparseLDA = new mDaehrLDA(s1.getTrainingSet(), s1.getTrainingLabels(), false);
+					glassoLDA = new mDaehrLDA(s1.getTrainingSet(), s1.getTrainingLabels(), false);
+					nonSparseLDA = new mDaehrLDA(s1.getTrainingSet(), s1.getTrainingLabels(), false);
+					
+					covDaehr = sparseLDA.getSparseCovPrecisionMatrx();
+					covGlasso = glassoLDA.getGLassoPrecisionMatrx();
+					covNonSparse = nonSparseLDA.getNonSparsePrecisionMatrx();
+
+					plotAccuracy("sparse-" + Estimator.lambda , covDaehr, covLarge);
+					
+					plotAccuracy("glasso-" + Estimator.lambda, covGlasso, covLarge);
+
+					plotAccuracy("nonsparse-" + Estimator.lambda , covNonSparse, covLarge);
+
+					
+					
+					Estimator.lambda *= 0.1;
 				}
 
-				for (int r = 0; r < 10; r++) {
-				//	Estimator.lambda = 0.005 * 0.25;
-
-					BalanceTTSelection s = new BalanceTTSelection(fm, base.getLabels(), t_size, te_size);
-					s.select();
-
-					long t1 = System.currentTimeMillis();
-					OLDA LDA = new OLDA(s.getTrainingSet(), s.getTrainingLabels(), false);
-					long t2 = System.currentTimeMillis();
-					accuracy("LDA", s.getTestingSet(), s.getTestingLabels(), LDA, t1, t2);
-
-					for (double slambda = 0.0; slambda < 1; slambda += 0.25) {
-						ShrinkageLDA.slambda = slambda;
-						t1 = System.currentTimeMillis();
-						ShrinkageLDA sLDA = new ShrinkageLDA(s.getTrainingSet(), s.getTrainingLabels());
-						t2 = System.currentTimeMillis();
-						accuracy("Shrinkage-" + ShrinkageLDA.slambda, s.getTestingSet(), s.getTestingLabels(), sLDA, t1,
-								t2);
-					}
-					for (double lambda = 100; lambda > 0.1; lambda*=0.1) {
-						Estimator.lambda=lambda;
-						t1 = System.currentTimeMillis();
-						ODaehrLDA oLDA = new ODaehrLDA(s.getTrainingSet(), s.getTrainingLabels(), false);
-						t2 = System.currentTimeMillis();
-						accuracy("SparseCov-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), oLDA, t1, t2);
-					}
-					
-					for (double lambda = 100; lambda > 0.1; lambda*=0.1) {
-						Estimator.lambda=lambda;
-						t1 = System.currentTimeMillis();
-						GLassoLDA oLDA = new GLassoLDA(s.getTrainingSet(), s.getTrainingLabels(), false);
-						t2 = System.currentTimeMillis();
-						accuracy("GLasso-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), oLDA, t1, t2);
-					}
-					
-					for (double lambda = 100; lambda > 0.1; lambda*=0.1) {
-						Estimator.lambda=lambda;
-						t1 = System.currentTimeMillis();
-						NonSparseLDA oLDA = new NonSparseLDA(s.getTrainingSet(), s.getTrainingLabels(), false);
-						t2 = System.currentTimeMillis();
-						accuracy("NonSparse-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), oLDA, t1, t2);
-					}
-					
-					t1 = System.currentTimeMillis();
-					SVMClassifier svm = new SVMClassifier(s.getTrainingSet(), s.getTrainingLabels());
-					t2 = System.currentTimeMillis();
-					accuracy("SVM", s.getTestingSet(), s.getTestingLabels(), svm, t1, t2);
-
-					t1 = System.currentTimeMillis();
-					LRClassifier lr = new LRClassifier(s.getTrainingSet(), s.getTrainingLabels());
-					t2 = System.currentTimeMillis();
-					accuracy("LR", s.getTestingSet(), s.getTestingLabels(), lr, t1, t2);
-
-					t1 = System.currentTimeMillis();
-					AdaboostClassifier ab = new AdaboostClassifier(s.getTrainingSet(), s.getTrainingLabels(), 10);
-					t2 = System.currentTimeMillis();
-					accuracy("AB-10", s.getTestingSet(), s.getTestingLabels(), ab, t1, t2);
-
-					t1 = System.currentTimeMillis();
-					ab = new AdaboostClassifier(s.getTrainingSet(), s.getTrainingLabels(), 50);
-					t2 = System.currentTimeMillis();
-					accuracy("AB-50", s.getTestingSet(), s.getTestingLabels(), ab, t1, t2);
-
+				mDaehrLDA.slambda = 0.75;
+				for (int i = 0; i < 4; i++) {
+					sparseLDA = new mDaehrLDA(s1.getTrainingSet(), s1.getTrainingLabels(), false);
+					covDaehr = sparseLDA.getShrinkagedCovPrecisionMatrx();
+					plotAccuracy("shrinkage-"+mDaehrLDA.slambda, covDaehr, covLarge);
+					mDaehrLDA.slambda -=0.25;
 				}
 
 			}
-		 }
-		}
 
+		}
+		// }
 	}
+
+	// }
 
 	private static void accuracy(String name, double[][] data, int[] labels, Classifier<double[]> classifier, long t1,
 			long t2) {
@@ -254,38 +242,13 @@ public class ICDMainCrossCompare {
 		return fm3;
 	}
 
-	private static void plotAccuracy(double[][] fm, double[][] fm2, HashMap<Integer, Set<Integer>> missingcodes,
-			int sum_miss_codes, double[][] fm3, int sum_recover_codes, double threshold) {
-		HashMap<Integer, Set<Integer>> recoverycodes = new HashMap<Integer, Set<Integer>>();
+	private static void plotAccuracy(String name, double[][] fm, double[][] fm2) {
 
-		for (int i = 0; i < fm.length; i++) {
-			for (int j = 0; j < fm[i].length; j++) {
-				if (fm2[i][j] == 0 && fm3[i][j] > threshold) {
-					sum_recover_codes++;
-					if (!recoverycodes.containsKey(i))
-						recoverycodes.put(i, new HashSet<Integer>());
-					recoverycodes.get(i).add(j);
+		double err_l1 = Utils.normalizedErrorL1((fm2), (fm), 0);
+		double err_l2 = Utils.normalizedErrorL2((fm2), (fm), 0);
 
-				}
-			}
-		}
-
-		int intersection = intersection(missingcodes, recoverycodes);
-		double precision = (double) intersection / (double) sum_recover_codes;
-		double recall = (double) intersection / (double) sum_miss_codes;
-		double f1 = 2 * precision * recall / (precision + recall);
-		double err_l1 = Utils.normalizedErrorL1Recovery(fm, fm2, fm3, threshold);
-		double err_l2 = Utils.normalizedErrorL2Recovery(fm, fm2, fm3, threshold);
-
-		ps.print(threshold);
-		ps.print("," + sum_miss_codes);
-		ps.print("," + sum_recover_codes);
-		ps.print("," + intersection);
-		ps.print("," + f1);
-		ps.print("," + precision);
-		ps.print("," + recall);
-		ps.print("," + err_l1);
-		ps.println("," + err_l2);
+		ps.print(name + "\t" + err_l1);
+		ps.println("\t" + err_l2);
 
 	}
 

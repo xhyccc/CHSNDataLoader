@@ -27,44 +27,7 @@ public class ResultAnalysis2 {
 	}
 
 	public static void main(String[] args) {
-		nmap.put("Daehr-5.000000000000001E-7", "daehr");
-		// nmap.put("DDaehr-5.000000000000001E-7", "rec+d");
-		nmap.put("LDA", "LDA&N/A&");
-		nmap.put("Shrinkage-0.0", "DIAG&N/A&");
-		nmap.put("Shrinkage-0.25", "&$0.25$&");
-		nmap.put("Shrinkage-0.5", "&$0.5$&");
-		nmap.put("Shrinkage-0.75", "&$0.75$&");
-		nmap.put("Daehr-0.005", "&$0.005*0.5^0$&");
-		nmap.put("Daehr-" + (0.005 * Math.pow(0.5, 1)), "&$0.005*0.5^1$&");
-		nmap.put("Daehr-" + (0.005 * Math.pow(0.5, 2)), "&$0.005*0.5^2$&");
-		nmap.put("Daehr-" + (0.005 * Math.pow(0.5, 3)), "&$0.005*0.5^3$&");
-		nmap.put("Daehr-" + (0.005 * Math.pow(0.5, 4)), "&$0.005*0.5^4$&");
-		nmap.put("Daehr-" + (0.005 * Math.pow(0.5, 5)), "&$0.005*0.5^5$&");
-		nmap.put("Daehr-" + (0.005 * Math.pow(0.5, 6)), "Daehr ($\\lambda$)&$0.005*0.5^6$&");
-		nmap.put("Daehr-" + (0.005 * Math.pow(0.5, 7)), "Daehr ($\\lambda$)&$0.005*0.5^7$&");
-		nmap.put("Daehr-" + (0.005 * Math.pow(0.5, 8)), "Daehr ($\\lambda$)&$0.005*0.5^8$&");
-		nmap.put("Daehr-" + (0.005 * Math.pow(0.5, 9)), "Daehr ($\\lambda$)&$0.005*0.5^9$&");
 
-		// nmap.put("recoveredLDA", "recover");
-		
-		String[] names={"LDA", "LR", "AB-10", "AB-50", "SVM", "Daehr-0.00125"};
-		
-		String[] names1 = { "LDA", "Shrinkage-0.0", 
-				"Shrinkage-0.25", 
-				"Shrinkage-0.5", 
-				"Shrinkage-0.75", 
-				"Daehr-0.005",
-				"Daehr-" + (0.005 * 0.5), 
-				"Daehr-" + (0.005 * Math.pow(0.5, 2)), 
-				"Daehr-" + (0.005 * Math.pow(0.5, 3)),
-				"Daehr-" + (0.005 * Math.pow(0.5, 4)), 
-		//		"Daehr-" + (0.005 * Math.pow(0.5, 5)),
-		//		"Daehr-" + (0.005 * Math.pow(0.5, 6)), 
-		//		"Daehr-" + (0.005 * Math.pow(0.5, 7)),
-		//		"Daehr-" + (0.005 * Math.pow(0.5, 8)), 
-		//		"Daehr-" + (0.005 * Math.pow(0.5, 9)),
-
-		};
 		for (int te_size : new int[] { 1000 }) {
 			HashMap<Integer,HashMap<String, Double>> accs=new HashMap<Integer,HashMap<String, Double>>();
 			HashMap<Integer,HashMap<String, Double>> f1s=new HashMap<Integer,HashMap<String, Double>>();
@@ -72,13 +35,13 @@ public class ResultAnalysis2 {
 			HashMap<Integer,HashMap<String, Double>> accs_std=new HashMap<Integer,HashMap<String, Double>>();
 			HashMap<Integer,HashMap<String, Double>> f1s_std=new HashMap<Integer,HashMap<String, Double>>();
 
-			for (int t = 50; t <= 350; t += 100) {
-		//		System.out.println("\\begin{table}\n\\caption{Performance Comparison with Training Set:" + t
-		//				+ "$\\times$ 2, Testing Set: " + te_size + "$\\times$2}");
-		//		System.out.println("\\footnotesize\n\\centering\n\\begin{tabular}{*{5}{l}}\n\\toprule");
-		//		System.out.println(" & Accuracy & F1-Score & Sensitivity & Specificity\\\\");
+			for (int t = 50; t <= 350; t += 50) {
+			//	System.out.println("\\begin{table}\n\\caption{Performance Comparison with Training Set:" + t
+			//			+ "$\\times$ 2, Testing Set: " + te_size + "$\\times$2}");
+			//	System.out.println("\\footnotesize\n\\centering\n\\begin{tabular}{*{5}{l}}\n\\toprule");
+			//	System.out.println(" & Accuracy & F1-Score & Sensitivity & Specificity\\\\");
 
-				for (int days = 30; days <= 30; days += 30) {
+				for (int days = 90; days <= 90; days += 30) {
 					int t_size = t;
 					try {
 
@@ -92,7 +55,7 @@ public class ResultAnalysis2 {
 						f1s.put(t_size, f1);
 
 						BufferedReader br = new BufferedReader(
-								new FileReader("/Users/bertrandx/Box Sync/CHSN_pattern mining/Jinghe/accuracy-cross-"
+								new FileReader("/Users/xiongha/Jiang-jbhi-2016/results/accuracy-cross-"
 										+ t_size + "-" + te_size + "-" + days + ".txt"));
 						String ln = br.readLine();
 						while (ln != null) {
@@ -129,7 +92,7 @@ public class ResultAnalysis2 {
 
 						
 						br = new BufferedReader(
-								new FileReader("/Users/bertrandx/Box Sync/CHSN_pattern mining/Jinghe/accuracy-cross-"
+								new FileReader("/Users/xiongha/Jiang-jbhi-2016/results/accuracy-cross-"
 										+ t_size + "-" + te_size + "-" + days + ".txt"));
 						ln = br.readLine();
 						while (ln != null) {
@@ -186,18 +149,23 @@ public class ResultAnalysis2 {
 				}
 
 			}
-			
-			for (String n : names) {
+			List<String> namess=new ArrayList<String>(accs.get(50).keySet());
+			Collections.sort(namess);
+			for (String n : namess) {
 				System.out.print(n+"&");
-				for (int t = 50; t < 250; t += 200) {
+				for (int t = 50; t < 250; t += 50) {
 					System.out.print(
-							fix3D(accs.get(t).get(n))+"$\\pm$"+fix3D(accs_std.get(t).get(n))+"&"+
-							fix3D(f1s.get(t).get(n))+"$\\pm$"+fix3D(f1s_std.get(t).get(n))+"&");	
+							fix3D(accs.get(t).get(n))//+" $\\pm$"+fix3D(accs_std.get(t).get(n))
+							+"&"+
+							fix3D(f1s.get(t).get(n))//+" $\\pm$"+fix3D(f1s_std.get(t).get(n))
+							+"&");	
 				}
 					System.out.print(
-							fix3D(accs.get(250).get(n))+"$\\pm$"+fix3D(accs_std.get(250).get(n))+"&"+
-							fix3D(f1s.get(250).get(n))+"$\\pm$"+fix3D(f1s_std.get(250).get(n)));
-			System.out.println("\\\\");
+							fix3D(accs.get(250).get(n))//+" $\\pm$"+fix3D(accs_std.get(250).get(n))
+							+"&"+
+							fix3D(f1s.get(250).get(n)) //+" $\\pm$"+fix3D(f1s_std.get(250).get(n))
+							);
+			System.out.println();
 			}
 
 			
