@@ -23,7 +23,8 @@ public class EHRRecordMap {
 				String[] codes=ln.split(" ");
 				for(String code:codes){
 					codeMap.put(code, cname);
-					System.out.println("mapping: "+code+"\t"+cname);
+					if(!code.isEmpty() && !code.equals(" "))
+						System.out.println("mapping: "+code+"\t"+cname);
 				}
 				ln=br.readLine();
 				ln=br.readLine();
@@ -37,7 +38,7 @@ public class EHRRecordMap {
 	
 	public static void main(String[] args){
 		EHRRecordMap map = new EHRRecordMap(
-				"/Users/bertrandx/Box Sync/CHSN_pattern mining/Jinghe/mapping.txt");
+				"/Users/xiongha/Box Sync/CHSN_pattern mining/Jinghe/mapping.txt");
 
 
 	}

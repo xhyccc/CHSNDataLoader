@@ -63,12 +63,12 @@ public class DataOutput2 {
 	}
 
 	public static void main(String[] args) {
-		EHRRecordMap map = new EHRRecordMap("/Users/bertrandx/Box Sync/CHSN_pattern mining/Jinghe/mapping.txt");
+		EHRRecordMap map = new EHRRecordMap("/Users/xiongha/Box Sync/CHSN_pattern mining/Jinghe/mapping.txt");
 
 		EHRecordBase base = ICDLineReader2.load(
-				"/Users/bertrandx/Box Sync/CHSN_pattern mining/Jinghe/non-mh_icd.csv", "x_icdcode", 300000000);
+				"/Users/xiongha/Box Sync/CHSN_pattern mining/Jinghe/non-mh_icd.csv", "x_icdcode", 300000000);
 
-		EHRecordBase base_2 = ICDLineReader2.load("/Users/bertrandx/Box Sync/CHSN_pattern mining/Jinghe/icd_MD.csv",
+		EHRecordBase base_2 = ICDLineReader2.load("/Users/xiongha/Box Sync/CHSN_pattern mining/Jinghe/icd_MD.csv",
 				"y_icdcode", 300000000);
 
 		base.setLabelsForAllPatients(0);
@@ -82,7 +82,7 @@ public class DataOutput2 {
 		double[][] fm = base.getBinaryMatrix();
 		System.out.println("matrix " + fm.length + " x " + fm[0].length);
 
-		saveFile(base, map, fm, "/Users/bertrandx/Box Sync/CHSN_pattern mining/Jinghe/code_matrix");
+		saveFile(base, map, fm, "/Users/xiongha/Box Sync/CHSN_pattern mining/Jinghe/code_matrix");
 	//	System.out.println("missing lines\t" + base.missingLines);
 	}
 

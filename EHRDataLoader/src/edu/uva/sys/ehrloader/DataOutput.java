@@ -28,8 +28,8 @@ public class DataOutput {
 				ps.print("," + base._ages.get(patients.get(i)));
 				// ps.print("," + base._gender.get(patients.get(i)));
 				for (int j = 0; j < codes.size(); j++) {
-					if (matrix[i][j] == 1) {
-						ps.print(",1.0");
+					if (matrix[i][j] >= 1) {
+						ps.print(","+matrix[i][j]);
 						ps2.println(i + "," + codes.get(j));
 					} else {
 						ps.print(",0.0");
@@ -63,12 +63,12 @@ public class DataOutput {
 	}
 
 	public static void main(String[] args) {
-		EHRRecordMap map = new EHRRecordMap("/Users/bertrandx/Box Sync/CHSN_pattern mining/Jinghe/mapping.txt");
+		EHRRecordMap map = new EHRRecordMap("/Users/xiongha/Box Sync/CHSN_pattern mining/Jinghe/mapping.txt");
 
 		EHRecordBase base = ICDLineReader.load(map,
-				"/Users/bertrandx/Box Sync/CHSN_pattern mining/Jinghe/non-mh_icd.csv", "x_icdcode", 30000);
+				"/Users/xiongha/Box Sync/CHSN_pattern mining/Jinghe/non-mh_icd.csv", "x_icdcode", 30000);
 
-		EHRecordBase base_2 = ICDLineReader.load(map, "/Users/bertrandx/Box Sync/CHSN_pattern mining/Jinghe/icd_MD.csv",
+		EHRecordBase base_2 = ICDLineReader.load(map, "/Users/xiongha/Box Sync/CHSN_pattern mining/Jinghe/icd_MD.csv",
 				"y_icdcode", 30000);
 
 		base.insertRecords(base_2);
@@ -76,10 +76,10 @@ public class DataOutput {
 		base.removeVisitsAfter(MHCode.codes, 30);
 		base.removePatientLessNVisit(3);
 
-		double[][] fm = base.getBinaryMatrix();
+		double[][] fm = base.getFrequencyMatrix();
 		System.out.println("matrix " + fm.length + " x " + fm[0].length);
 
-		saveFile(base, map, fm, "/Users/bertrandx/Box Sync/CHSN_pattern mining/Jinghe/code_matrix");
+		saveFile(base, map, fm, "/Users/xiongha/Box Sync/CHSN_pattern mining/Jinghe/code_matrix");
 	//	System.out.println("missing lines\t" + base.missingLines);
 	}
 

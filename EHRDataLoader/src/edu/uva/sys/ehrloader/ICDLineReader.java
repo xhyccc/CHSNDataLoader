@@ -22,6 +22,7 @@ public class ICDLineReader {
 					String[] lns = ln.split(",");
 					// if (isNumeric(lns[3]))
 					String code = lns[3].replaceAll("\\.", "");
+					//String code = 
 					if (map.codeMap.containsKey(code)) {
 						_base.insertRecord(lns[1], lns[2], map.codeMap.get(code), Integer.parseInt(lns[4]),
 								lns[5].toLowerCase().equals("M") ? 1 : 0, 1);

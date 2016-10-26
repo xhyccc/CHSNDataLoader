@@ -91,7 +91,7 @@ public class MatrixCompare {
 				e.printStackTrace();
 			}
 
-			for (int r = 0; r < 30; r++) {
+			for (int r = 0; r < 1; r++) {
 				BalanceTTSelection s1 = new BalanceTTSelection(fm, base.getLabels(), 200, 10);
 				s1.select();
 
