@@ -6,10 +6,12 @@ import java.io.FileNotFoundException;
 import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import edu.uva.hdstats.Estimator;
-import edu.uva.hdstats.da.AdaboostClassifier;
+import edu.uva.hdstats.da.AdaboostLRClassifier;
 import edu.uva.hdstats.da.Classifier;
 import edu.uva.hdstats.da.DaehrLDA;
 import edu.uva.hdstats.da.LDA;
@@ -18,6 +20,7 @@ import edu.uva.hdstats.da.ODaehrLDA;
 import edu.uva.hdstats.da.OLDA;
 import edu.uva.hdstats.da.OrgLDA;
 import edu.uva.hdstats.da.PDLassoLDA;
+import edu.uva.hdstats.da.PseudoInverse;
 import edu.uva.hdstats.da.SVMClassifier;
 import edu.uva.hdstats.da.ShLDA;
 import edu.uva.hdstats.da.ShrinkageLDA;
@@ -25,6 +28,7 @@ import edu.uva.hdstats.da.mDaehrLDA;
 import edu.uva.libopt.numeric.*;
 import edu.uva.sys.ehrloader.ml.BalanceTTSelection;
 import edu.uva.sys.ehrloader.recovery.*;
+import smile.math.matrix.Matrix;
 
 public class MatrixCompare {
 
@@ -79,7 +83,7 @@ public class MatrixCompare {
 		// double[][] recoveredData = dataRecovery(new NMFRecovery(10), fm, fm,
 		// missingcodes, 0);
 
-		// for (int t = 50; t <= 250; t += 200) {
+		for (int t = 200; t <= 20000; t *= 10) 
 		// for (int te = 100; te <= 500; te += 100) {
 		for (int days = 30; days <= 30; days += 30) {
 			// t_size = t;
@@ -90,9 +94,11 @@ public class MatrixCompare {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-
+			
+			String path="/Users/xiongha/Box Sync/CHSN_pattern mining/Jinghe/";
+			
 			for (int r = 0; r < 1; r++) {
-				BalanceTTSelection s1 = new BalanceTTSelection(fm, base.getLabels(), 200, 10);
+				BalanceTTSelection s1 = new BalanceTTSelection(fm, base.getLabels(), t, 10);
 				s1.select();
 
 				mDaehrLDA LDA = new mDaehrLDA(s1.getTrainingSet(), s1.getTrainingLabels(), false);
@@ -109,12 +115,13 @@ public class MatrixCompare {
 				double[][] covGlasso = glassoLDA.getGLassoPrecisionMatrx();
 				double[][] covNonSparse = nonSparseLDA.getNonSparsePrecisionMatrx();
 				double[][] covLarge = large.getSamplePrecisionMatrix();
-
-				plotAccuracy("sample", covLDA, covLarge);
+				
+				plotAccuracy("sample", covLarge, covLarge);
 			//	plotAccuracy("sample-100-", covLDA[1], covLarge[1]);
-
-				Estimator.lambda = 10000;
-				for (int i = 0; i < 6; i++) {
+				saveMatrxInFile(path+"large",covLarge,base._codes,map.nameMap);
+				
+				Estimator.lambda = 100;
+				for (int i = 0; i < 3; i++) {
 					sparseLDA = new mDaehrLDA(s1.getTrainingSet(), s1.getTrainingLabels(), false);
 					glassoLDA = new mDaehrLDA(s1.getTrainingSet(), s1.getTrainingLabels(), false);
 					nonSparseLDA = new mDaehrLDA(s1.getTrainingSet(), s1.getTrainingLabels(), false);
@@ -123,11 +130,14 @@ public class MatrixCompare {
 					covGlasso = glassoLDA.getGLassoPrecisionMatrx();
 					covNonSparse = nonSparseLDA.getNonSparsePrecisionMatrx();
 
-					plotAccuracy("sparse-" + Estimator.lambda , covDaehr, covLarge);
-					
+			//		plotAccuracy("sparse-" + Estimator.lambda , covDaehr, covLarge);
+			//		saveMatrxInFile(path+"sparse-"+ Estimator.lambda+"-"+t,new Matrix(covDaehr).inverse(),base._codes,map.nameMap);
+
 					plotAccuracy("glasso-" + Estimator.lambda, covGlasso, covLarge);
+					saveMatrxInFile(path+"glasso-" + Estimator.lambda+"_"+t,(covGlasso),base._codes,map.nameMap);
 
 					plotAccuracy("nonsparse-" + Estimator.lambda , covNonSparse, covLarge);
+					saveMatrxInFile(path+"nonsparse-" + Estimator.lambda+"-"+t,(covNonSparse),base._codes,map.nameMap);
 
 					
 					
@@ -139,6 +149,8 @@ public class MatrixCompare {
 					sparseLDA = new mDaehrLDA(s1.getTrainingSet(), s1.getTrainingLabels(), false);
 					covDaehr = sparseLDA.getShrinkagedCovPrecisionMatrx();
 					plotAccuracy("shrinkage-"+mDaehrLDA.slambda, covDaehr, covLarge);
+					saveMatrxInFile(path+"shrinkage-"+mDaehrLDA.slambda+"-"+t,covDaehr,base._codes,map.nameMap);
+
 					mDaehrLDA.slambda -=0.25;
 				}
 
@@ -149,6 +161,21 @@ public class MatrixCompare {
 	}
 
 	// }
+	
+	private static void saveMatrxInFile(String path, double[][] matrx, List<String> codes, Map<String, String> map){
+		try {
+			PrintStream ps=new PrintStream(path+".txt");
+			for(int i=0;i<matrx.length;i++){
+				for(int j=0;j<matrx[i].length;j++){
+					ps.println(map.get(codes.get(i))+"\t"+map.get(codes.get(j))+"\t"+matrx[i][j]);
+				}
+			}
+			ps.close();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		}
 
 	private static void accuracy(String name, double[][] data, int[] labels, Classifier<double[]> classifier, long t1,
 			long t2) {
