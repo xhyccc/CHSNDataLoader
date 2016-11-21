@@ -82,7 +82,7 @@ public class ICDMainCrossCompare {
 		// double[][] recoveredData = dataRecovery(new NMFRecovery(10), fm, fm,
 		// missingcodes, 0);
 
-		for (int t = 100; t <= 800; t += 200) {
+		for (int t = 100; t <= 1000; t += 200) {
 			for (int te = 200; te <= 200; te += 200) {
 				for (int days = 90; days <= 90; days += 30) {
 					t_size = t;
@@ -150,28 +150,7 @@ public class ICDMainCrossCompare {
 							oLDA.setNumPredictors(50);
 							accuracy("LikelihoodNonSparse-50-10-" + Estimator.lambda, s.getTestingSet(),
 									s.getTestingLabels(), oLDA, t1, t2);
-						}
-						
-						for (double lambda = 1; lambda >= 0.001; lambda*= 0.1) {
-							Estimator.lambda = lambda;
-							t1 = System.currentTimeMillis();
-							RegularizedBayesLDA oLDA = new RegularizedBayesLDA(s.getTrainingSet(),
-									s.getTrainingLabels(), 200, 0);
-							t2 = System.currentTimeMillis();
-						//	oLDA.setNumPredictors(5000);
-							oLDA.setNumPredictors(200);
-							accuracy("LikelihoodNonSparse-200-10-" + Estimator.lambda, s.getTestingSet(),
-									s.getTestingLabels(), oLDA, t1, t2);
-							oLDA.setNumPredictors(150);
-							accuracy("LikelihoodNonSparse-150-10-" + Estimator.lambda, s.getTestingSet(),
-									s.getTestingLabels(), oLDA, t1, t2);
-							oLDA.setNumPredictors(100);
-							accuracy("LikelihoodNonSparse-100-10-" + Estimator.lambda, s.getTestingSet(),
-									s.getTestingLabels(), oLDA, t1, t2);
-							oLDA.setNumPredictors(50);
-							accuracy("LikelihoodNonSparse-50-10-" + Estimator.lambda, s.getTestingSet(),
-									s.getTestingLabels(), oLDA, t1, t2);
-						}
+						}						
 
 						
 						for (double lambda = 1; lambda >= 0.001; lambda*= 0.1) {
