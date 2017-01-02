@@ -11,18 +11,13 @@ import edu.uva.hdstats.da.AdaBoostTreeClassifier;
 import edu.uva.hdstats.da.AdaboostLRClassifier;
 import edu.uva.hdstats.da.BayesLDA;
 import edu.uva.hdstats.da.LiklihoodBayesLDA;
-import edu.uva.hdstats.da.MCBayesLDA;
-import edu.uva.hdstats.da.MCRegularizedBayesLDA;
 import edu.uva.hdstats.da.RegularizedLikelihoodBayesLDA;
 import edu.uva.hdstats.da.Classifier;
-import edu.uva.hdstats.da.DTreeClassifier;
 import edu.uva.hdstats.da.DaehrLDA;
 import edu.uva.hdstats.da.GLassoLDA;
-import edu.uva.hdstats.da.KNNClassifier;
 import edu.uva.hdstats.da.LDA;
 import edu.uva.hdstats.da.LRClassifier;
 import edu.uva.hdstats.da.NonSparseLDA;
-import edu.uva.hdstats.da.NonlinearSVMClassifier;
 import edu.uva.hdstats.da.ODaehrLDA;
 import edu.uva.hdstats.da.OLDA;
 import edu.uva.hdstats.da.OrgLDA;
@@ -36,7 +31,7 @@ import edu.uva.libopt.numeric.*;
 import edu.uva.sys.ehrloader.ml.BalanceTTSelection;
 import edu.uva.sys.ehrloader.recovery.*;
 
-public class ICDMainCrossCompare {
+public class ICDMainEnsCompare {
 
 	public static PrintStream ps = null;
 	public static int t_size = 400;
@@ -89,7 +84,7 @@ public class ICDMainCrossCompare {
 		// double[][] recoveredData = dataRecovery(new NMFRecovery(10), fm, fm,
 		// missingcodes, 0);
 
-		for (int t = 50; t <= 500; t += 100) {
+		for (int t = 100; t <= 500; t += 100) {
 			for (int te = 200; te <= 200; te += 200) {
 				for (int days = 90; days <= 90; days += 30) {
 					t_size = t;
@@ -109,9 +104,9 @@ public class ICDMainCrossCompare {
 						s.select();
 
 						long t1 = System.currentTimeMillis();
-						OLDA LDA = new OLDA(s.getTrainingSet(), s.getTrainingLabels(), false);
+					//	OLDA LDA = new OLDA(s.getTrainingSet(), s.getTrainingLabels(), false);
 						long t2 = System.currentTimeMillis();
-						accuracy("LDA", s.getTestingSet(), s.getTestingLabels(), LDA, t1, t2);
+					//	accuracy("LDA", s.getTestingSet(), s.getTestingLabels(), LDA, t1, t2);
 
 						// for (double slambda = 0.0; slambda < 1; slambda +=
 						// 0.25) {
@@ -138,189 +133,160 @@ public class ICDMainCrossCompare {
 						// t2);
 						// }
 
-						for (double lambda = 100; lambda >= 1; lambda *= 0.1) {
-							Estimator.lambda = lambda;
-							t1 = System.currentTimeMillis();
-							RegularizedBayesLDA oLDA = new RegularizedBayesLDA(s.getTrainingSet(),
-									s.getTrainingLabels(), 200, 0);
-							t2 = System.currentTimeMillis();
-							// oLDA.setNumPredictors(5000);
-							oLDA.setNumPredictors(200);
-							accuracy("D_BayesRDA-200-10-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(),
-									oLDA, t1, t2);
-							oLDA.setNumPredictors(150);
-							accuracy("D_BayesRDA-150-10-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(),
-									oLDA, t1, t2);
-							oLDA.setNumPredictors(100);
-							accuracy("D_BayesRDA-100-10-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(),
-									oLDA, t1, t2);
-							oLDA.setNumPredictors(50);
-							accuracy("D_BayesRDA-50-10-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(),
-									oLDA, t1, t2);
-						}
-
-						for (double lambda = 100; lambda >= 1; lambda *= 0.1) {
-							Estimator.lambda = lambda;
-							t1 = System.currentTimeMillis();
-							MCRegularizedBayesLDA oLDA = new MCRegularizedBayesLDA(s.getTrainingSet(),
-									s.getTrainingLabels(), 200, 0);
-							t2 = System.currentTimeMillis();
-							// oLDA.setNumPredictors(5000);
-							oLDA.setNumPredictors(200);
-							accuracy("MC_BayesRDA-200-10-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(),
-									oLDA, t1, t2);
-							oLDA.setNumPredictors(150);
-							accuracy("MC_BayesRDA-150-10-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(),
-									oLDA, t1, t2);
-							oLDA.setNumPredictors(100);
-							accuracy("MC_BayesRDA-100-10-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(),
-									oLDA, t1, t2);
-							oLDA.setNumPredictors(50);
-							accuracy("MC_BayesRDA-50-10-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(),
-									oLDA, t1, t2);
-						}
-						for (double lambda = 100; lambda >= 1; lambda *= 0.1) {
-							Estimator.lambda = lambda;
-							t1 = System.currentTimeMillis();
-							GLassoLDA oLDA = new GLassoLDA(s.getTrainingSet(), s.getTrainingLabels(), false);
-							t2 = System.currentTimeMillis();
-							accuracy("CRDA-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), oLDA, t1, t2);
-						}
-
-						t1 = System.currentTimeMillis();
-						BayesLDA bLDA = new BayesLDA(s.getTrainingSet(), s.getTrainingLabels(), 200, 10);
-						t2 = System.currentTimeMillis();
-						// oLDA.setNumPredictors(5000);
-						bLDA.setNumPredictors(200);
-						accuracy("D_BayesLDA-200-10-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), bLDA,
-								t1, t2);
-						bLDA.setNumPredictors(150);
-						accuracy("D_BayesLDA-150-10-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), bLDA,
-								t1, t2);
-						bLDA.setNumPredictors(100);
-						accuracy("D_BayesLDA-100-10-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), bLDA,
-								t1, t2);
-						bLDA.setNumPredictors(50);
-						accuracy("D_BayesLDA-50-10-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), bLDA,
-								t1, t2);
-
-						t1 = System.currentTimeMillis();
-						MCBayesLDA mcbLDA = new MCBayesLDA(s.getTrainingSet(), s.getTrainingLabels(), 200, 10);
-						t2 = System.currentTimeMillis();
-						// oLDA.setNumPredictors(5000);
-						mcbLDA.setNumPredictors(200);
-						accuracy("MC_BayesLDA-200-10-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(),
-								mcbLDA, t1, t2);
-						mcbLDA.setNumPredictors(150);
-						accuracy("MC_BayesLDA-150-10-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(),
-								mcbLDA, t1, t2);
-						mcbLDA.setNumPredictors(100);
-						accuracy("MC_BayesLDA-100-10-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(),
-								mcbLDA, t1, t2);
-						mcbLDA.setNumPredictors(50);
-						accuracy("MC_BayesLDA-50-10-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(),
-								mcbLDA, t1, t2);
-
-						// t1 = System.currentTimeMillis();
-						// KNNClassifier knn = new
-						// KNNClassifier(s.getTrainingSet(),
-						// s.getTrainingLabels(),1);
-						// t2 = System.currentTimeMillis();
-						// accuracy("KNN-1", s.getTestingSet(),
-						// s.getTestingLabels(), knn, t1, t2);
-
-						// t1 = System.currentTimeMillis();
-						// knn = new KNNClassifier(s.getTrainingSet(),
-						// s.getTrainingLabels(),3);
-						// t2 = System.currentTimeMillis();
-						// accuracy("KNN-3", s.getTestingSet(),
-						// s.getTestingLabels(), knn, t1, t2);
-
-						// t1 = System.currentTimeMillis();
-						// knn = new KNNClassifier(s.getTrainingSet(),
-						// s.getTrainingLabels(),5);
-						// t2 = System.currentTimeMillis();
-						// accuracy("KNN-5", s.getTestingSet(),
-						// s.getTestingLabels(), knn, t1, t2);
-
-						// t1 = System.currentTimeMillis();
-						// DTreeClassifier dtc = new
-						// DTreeClassifier(s.getTrainingSet(),
-						// s.getTrainingLabels(),5);
-						// t2 = System.currentTimeMillis();
-						// accuracy("DTree-5", s.getTestingSet(),
-						// s.getTestingLabels(), dtc, t1, t2);
-
-						// t1 = System.currentTimeMillis();
-						// dtc = new DTreeClassifier(s.getTrainingSet(),
-						// s.getTrainingLabels(),15);
-						// t2 = System.currentTimeMillis();
-						// accuracy("DTree-15", s.getTestingSet(),
-						// s.getTestingLabels(), dtc, t1, t2);
-						try {
-							t1 = System.currentTimeMillis();
-							DTreeClassifier dtc = new DTreeClassifier(s.getTrainingSet(), s.getTrainingLabels(), 10);
-							t2 = System.currentTimeMillis();
-							accuracy("DTree-10", s.getTestingSet(), s.getTestingLabels(), dtc, t1, t2);
-
-							t1 = System.currentTimeMillis();
-							dtc = new DTreeClassifier(s.getTrainingSet(), s.getTrainingLabels(), 20);
-							t2 = System.currentTimeMillis();
-							accuracy("DTree-20", s.getTestingSet(), s.getTestingLabels(), dtc, t1, t2);
-						} catch (Exception exp) {
-							exp.printStackTrace();
-						}
-
-						t1 = System.currentTimeMillis();
-						SVMClassifier svm = new SVMClassifier(s.getTrainingSet(), s.getTrainingLabels());
-						t2 = System.currentTimeMillis();
-						accuracy("LinearSVM", s.getTestingSet(), s.getTestingLabels(), svm, t1, t2);
-
-						t1 = System.currentTimeMillis();
-						NonlinearSVMClassifier nsvm = new NonlinearSVMClassifier(s.getTrainingSet(),
-								s.getTrainingLabels(), 0.1, 1);
-						t2 = System.currentTimeMillis();
-						accuracy("NLSVM-0.1", s.getTestingSet(), s.getTestingLabels(), nsvm, t1, t2);
-
-						t1 = System.currentTimeMillis();
-						nsvm = new NonlinearSVMClassifier(s.getTrainingSet(), s.getTrainingLabels(), 1, 1);
-						t2 = System.currentTimeMillis();
-						accuracy("NLSVM-1.0", s.getTestingSet(), s.getTestingLabels(), nsvm, t1, t2);
-
-						t1 = System.currentTimeMillis();
-						nsvm = new NonlinearSVMClassifier(s.getTrainingSet(), s.getTrainingLabels(), 10, 1);
-						t2 = System.currentTimeMillis();
-						accuracy("NLSVM-10", s.getTestingSet(), s.getTestingLabels(), nsvm, t1, t2);
-
-						t1 = System.currentTimeMillis();
-						LRClassifier lr = new LRClassifier(s.getTrainingSet(), s.getTrainingLabels(), 100);
-						t2 = System.currentTimeMillis();
-						accuracy("RLR-100", s.getTestingSet(), s.getTestingLabels(), lr, t1, t2);
-
-						t1 = System.currentTimeMillis();
-						lr = new LRClassifier(s.getTrainingSet(), s.getTrainingLabels(), 10);
-						t2 = System.currentTimeMillis();
-						accuracy("RLR-10", s.getTestingSet(), s.getTestingLabels(), lr, t1, t2);
-
-						t1 = System.currentTimeMillis();
-						lr = new LRClassifier(s.getTrainingSet(), s.getTrainingLabels(), 1);
-						t2 = System.currentTimeMillis();
-						accuracy("RLR-1", s.getTestingSet(), s.getTestingLabels(), lr, t1, t2);
+//						for (double lambda = 10; lambda >= 0.001; lambda*= 0.1) {
+//							Estimator.lambda = lambda;
+//							t1 = System.currentTimeMillis();
+//							RegularizedLikelihoodBayesLDA oLDA = new RegularizedLikelihoodBayesLDA(s.getTrainingSet(),
+//									s.getTrainingLabels(), 200, 0);
+//							t2 = System.currentTimeMillis();
+//						//	oLDA.setNumPredictors(5000);
+//							oLDA.setNumPredictors(200);
+//							accuracy("LikelihoodNonSparse-200-10-" + Estimator.lambda, s.getTestingSet(),
+//									s.getTestingLabels(), oLDA, t1, t2);
+//							oLDA.setNumPredictors(150);
+//							accuracy("LikelihoodNonSparse-150-10-" + Estimator.lambda, s.getTestingSet(),
+//									s.getTestingLabels(), oLDA, t1, t2);
+//							oLDA.setNumPredictors(100);
+//							accuracy("LikelihoodNonSparse-100-10-" + Estimator.lambda, s.getTestingSet(),
+//									s.getTestingLabels(), oLDA, t1, t2);
+//							oLDA.setNumPredictors(50);
+//							accuracy("LikelihoodNonSparse-50-10-" + Estimator.lambda, s.getTestingSet(),
+//									s.getTestingLabels(), oLDA, t1, t2);
+//						}						
+//
+//						
+//						for (double lambda = 10; lambda >= 0.001; lambda*= 0.1) {
+//							Estimator.lambda = lambda;
+//							t1 = System.currentTimeMillis();
+//							RegularizedBayesLDA oLDA = new RegularizedBayesLDA(s.getTrainingSet(),
+//									s.getTrainingLabels(), 200, 0);
+//							t2 = System.currentTimeMillis();
+//						//	oLDA.setNumPredictors(5000);
+//							oLDA.setNumPredictors(200);
+//							accuracy("BayesNonSparse-200-10-" + Estimator.lambda, s.getTestingSet(),
+//									s.getTestingLabels(), oLDA, t1, t2);
+//							oLDA.setNumPredictors(150);
+//							accuracy("BayesNonSparse-150-10-" + Estimator.lambda, s.getTestingSet(),
+//									s.getTestingLabels(), oLDA, t1, t2);
+//							oLDA.setNumPredictors(100);
+//							accuracy("BayesNonSparse-100-10-" + Estimator.lambda, s.getTestingSet(),
+//									s.getTestingLabels(), oLDA, t1, t2);
+//							oLDA.setNumPredictors(50);
+//							accuracy("BayesNonSparse-50-10-" + Estimator.lambda, s.getTestingSet(),
+//									s.getTestingLabels(), oLDA, t1, t2);
+//						}
+//						for (double lambda = 10; lambda >= 0.00001; lambda*= 0.1) {
+//							Estimator.lambda = lambda;
+//							t1 = System.currentTimeMillis();
+//							GLassoLDA oLDA = new GLassoLDA(s.getTrainingSet(), s.getTrainingLabels(), false);
+//							t2 = System.currentTimeMillis();
+//							accuracy("GLasso-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), oLDA, t1,
+//									t2);
+//						}
+//
+//						// for (double lambda = 0.001; lambda > 0.0001;
+//						// lambda*=0.1) {
+//						// Estimator.lambda=lambda;
+//						// t1 = System.currentTimeMillis();
+//						// NonSparseLDA oLDA = new
+//						// NonSparseLDA(s.getTrainingSet(),
+//						// s.getTrainingLabels(), false);
+//						// t2 = System.currentTimeMillis();
+//						// accuracy("NonSparse-" + Estimator.lambda,
+//						// s.getTestingSet(), s.getTestingLabels(), oLDA, t1,
+//						// t2);
+//						// }
+//
+//						// for (double lambda = 100; lambda > 0.1; lambda*=0.1)
+//						// {
+//						// Estimator.lambda=lambda;
+//						// t1 = System.currentTimeMillis();
+//						// NonSparseLDA oLDA = new
+//						// NonSparseLDA(s.getTrainingSet(),
+//						// s.getTrainingLabels(), false);
+//						// t2 = System.currentTimeMillis();
+//						// accuracy("NonSparse-" + Estimator.lambda,
+//						// s.getTestingSet(), s.getTestingLabels(), oLDA, t1,
+//						// t2);
+//						// }
+//
+//						// for (double lambda = 0.001; lambda >= 0.0001;
+//						// lambda-=0.0003) {
+//						// Estimator.lambda=lambda;
+//						t1 = System.currentTimeMillis();
+//						LiklihoodBayesLDA lLDA = new LiklihoodBayesLDA(s.getTrainingSet(),
+//								s.getTrainingLabels(), 200, 10);
+//						t2 = System.currentTimeMillis();
+//					//	oLDA.setNumPredictors(5000);
+//						lLDA.setNumPredictors(200);
+//						accuracy("LikelihoodLDA-200-10-" + Estimator.lambda, s.getTestingSet(),
+//								s.getTestingLabels(), lLDA, t1, t2);
+//						lLDA.setNumPredictors(150);
+//						accuracy("LikelihoodLDA-150-10-" + Estimator.lambda, s.getTestingSet(),
+//								s.getTestingLabels(), lLDA, t1, t2);
+//						lLDA.setNumPredictors(100);
+//						accuracy("LikelihoodLDA-100-10-" + Estimator.lambda, s.getTestingSet(),
+//								s.getTestingLabels(), lLDA, t1, t2);
+//						lLDA.setNumPredictors(50);
+//						accuracy("LikelihoodLDA-50-10-" + Estimator.lambda, s.getTestingSet(),
+//								s.getTestingLabels(), lLDA, t1, t2);
+//						// }
+//
+//						
+//						t1 = System.currentTimeMillis();
+//						BayesLDA bLDA = new BayesLDA(s.getTrainingSet(),
+//								s.getTrainingLabels(), 200, 10);
+//						t2 = System.currentTimeMillis();
+//					//	oLDA.setNumPredictors(5000);
+//						bLDA.setNumPredictors(200);
+//						accuracy("BayesLDA-1200-10-" + Estimator.lambda, s.getTestingSet(),
+//								s.getTestingLabels(), bLDA, t1, t2);
+//						bLDA.setNumPredictors(150);
+//						accuracy("BayesLDA-150-10-" + Estimator.lambda, s.getTestingSet(),
+//								s.getTestingLabels(), bLDA, t1, t2);
+//						bLDA.setNumPredictors(100);
+//						accuracy("BayesLDA-100-10-" + Estimator.lambda, s.getTestingSet(),
+//								s.getTestingLabels(), bLDA, t1, t2);
+//						bLDA.setNumPredictors(50);
+//						accuracy("BayesLDA-50-10-" + Estimator.lambda, s.getTestingSet(),
+//								s.getTestingLabels(), bLDA, t1, t2);
+//						
+//						t1 = System.currentTimeMillis();
+//						SVMClassifier svm = new SVMClassifier(s.getTrainingSet(), s.getTrainingLabels());
+//						t2 = System.currentTimeMillis();
+//						accuracy("SVM", s.getTestingSet(), s.getTestingLabels(), svm, t1, t2);
+//
+//						t1 = System.currentTimeMillis();
+//						LRClassifier lr = new LRClassifier(s.getTrainingSet(), s.getTrainingLabels());
+//						t2 = System.currentTimeMillis();
+//						accuracy("LR", s.getTestingSet(), s.getTestingLabels(), lr, t1, t2);
 
 						t1 = System.currentTimeMillis();
 						AdaboostLRClassifier ab = new AdaboostLRClassifier(s.getTrainingSet(), s.getTrainingLabels(),
 								100);
 						t2 = System.currentTimeMillis();
-						accuracy("AdaBoost-100", s.getTestingSet(), s.getTestingLabels(), ab, t1, t2);
+						accuracy("ABLR-100", s.getTestingSet(), s.getTestingLabels(), ab, t1, t2);
 
 						t1 = System.currentTimeMillis();
 						ab = new AdaboostLRClassifier(s.getTrainingSet(), s.getTrainingLabels(), 200);
 						t2 = System.currentTimeMillis();
-						accuracy("AdaBoost-200", s.getTestingSet(), s.getTestingLabels(), ab, t1, t2);
+						accuracy("ABLR-200", s.getTestingSet(), s.getTestingLabels(), ab, t1, t2);
+						
+						t1 = System.currentTimeMillis();
+						AdaBoostTreeClassifier abt = new AdaBoostTreeClassifier(s.getTrainingSet(), s.getTrainingLabels(),
+								100);
+						t2 = System.currentTimeMillis();
+						accuracy("ABT-100", s.getTestingSet(), s.getTestingLabels(), abt, t1, t2);
 
 						t1 = System.currentTimeMillis();
-						RandomForestClassifier rfc = new RandomForestClassifier(s.getTrainingSet(),
-								s.getTrainingLabels(), 100);
+						abt = new AdaBoostTreeClassifier(s.getTrainingSet(), s.getTrainingLabels(), 200);
+						t2 = System.currentTimeMillis();
+						accuracy("ABT-200", s.getTestingSet(), s.getTestingLabels(), abt, t1, t2);
+						
+						
+						t1 = System.currentTimeMillis();
+						RandomForestClassifier rfc = new RandomForestClassifier(s.getTrainingSet(), s.getTrainingLabels(),
+								100);
 						t2 = System.currentTimeMillis();
 						accuracy("RFC-100", s.getTestingSet(), s.getTestingLabels(), rfc, t1, t2);
 
@@ -328,6 +294,7 @@ public class ICDMainCrossCompare {
 						rfc = new RandomForestClassifier(s.getTrainingSet(), s.getTrainingLabels(), 200);
 						t2 = System.currentTimeMillis();
 						accuracy("RFC-200", s.getTestingSet(), s.getTestingLabels(), rfc, t1, t2);
+
 
 					}
 

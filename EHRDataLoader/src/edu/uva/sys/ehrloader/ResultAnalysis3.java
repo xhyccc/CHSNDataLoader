@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Set;
 import java.io.FileReader;
 
-public class ResultAnalysis2 {
+public class ResultAnalysis3 {
 
 	public static HashMap<String, String> nmap = new HashMap<String, String>();
 
@@ -36,10 +36,12 @@ public class ResultAnalysis2 {
 			HashMap<Integer,HashMap<String, Double>> f1s_std=new HashMap<Integer,HashMap<String, Double>>();
 
 			for (int t = 50; t <= 500; t += 50) {
-				System.out.println("\\begin{table}\n\\caption{Performance Comparison with Training Set:" + t
-						+ "$\\times$ 2, Testing Set: " + te_size + "$\\times$2}");
-				System.out.println("\\footnotesize\n\\centering\n\\begin{tabular}{*{5}{l}}\n\\toprule");
-				System.out.println(" & Accuracy & F1-Score & Sensitivity & Specificity\\\\");
+				System.out.println(
+						//"\\begin{table}\n\\caption{Performance Comparison with " + 
+					"Training Set:"+	t+ "* 2, Testing Set: " + te_size + "*2"
+				);
+			//	System.out.println("\\footnotesize\n\\centering\n\\begin{tabular}{*{5}{l}}\n\\toprule");
+				System.out.println(" \t Accuracy \t F1-Score \t Sensitivity \t Specificity");
 
 				for (int days = 90; days <= 90; days += 30) {
 					int t_size = t;
@@ -55,7 +57,7 @@ public class ResultAnalysis2 {
 						f1s.put(t_size, f1);
 
 						BufferedReader br = new BufferedReader(
-								new FileReader("/Users/xiongha/Dropbox/technical-reports/report-1/bayes-EHR/accuracy-bayes-"
+								new FileReader("/Users/xiongha/Box Sync/CHSN_pattern mining/Jinghe/accuracy-ensemble-"
 										+ t_size + "-" + te_size + "-" + days + ".txt"));
 						String ln = br.readLine();
 						while (ln != null) {
@@ -92,7 +94,7 @@ public class ResultAnalysis2 {
 
 						
 						br = new BufferedReader(
-								new FileReader("/Users/xiongha/Dropbox/technical-reports/report-1/bayes-EHR/accuracy-bayes-"
+								new FileReader("/Users/xiongha/Box Sync/CHSN_pattern mining/Jinghe/accuracy-ensemble-"
 										+ t_size + "-" + te_size + "-" + days + ".txt"));
 						ln = br.readLine();
 						while (ln != null) {
@@ -134,20 +136,23 @@ public class ResultAnalysis2 {
 
 						}
 
-						System.out.println("\\hline\\multicolumn{5}{c}{  Days in Advance: " + days + "}\\\\\\hline");
+				//		System.out.println("\\hline\\multicolumn{5}{c}{  Days in Advance: " + days + "}\\\\\\hline");
 						List<String> namess=new ArrayList<String>(accs.get(50).keySet());
 						Collections.sort(namess);
 						for (String n : namess) {
-							System.out.println(n+"&" + fix3D(acc.get(n)) + " $\\pm$ "
-									+ fix3D(Math.sqrt(acc_std.get(n))) + "&"
-									+ fix3D(f1.get(n)) + " $\\pm$ "
-									+ fix3D(Math.sqrt(f1_std.get(n) )) + "&"
-									+ fix3D(sen.get(n) ) + " $\\pm$ "
-									+ fix3D(Math.sqrt(sen_std.get(n) )) + "&"
-									+ fix3D(spe.get(n) ) + " $\\pm$ "
-									+ fix3D(Math.sqrt(spe_std.get(n) )) + "\\\\");
+							System.out.println(n+"\t" + fix3D(acc.get(n)) 
+				//			+ " $\\pm$ "+ fix3D(Math.sqrt(acc_std.get(n))) 
+							+ "\t"+ fix3D(f1.get(n))  
+							//		" $\\pm$ "+ fix3D(Math.sqrt(f1_std.get(n) )) 									
+							+ "\t"+ fix3D(sen.get(n) )
+							//+ " $\\pm$ "
+							//		+ fix3D(Math.sqrt(sen_std.get(n) )) 
+							+ "\t" + fix3D(spe.get(n) ) 
+							//+ " $\\pm$ "
+							//		+ fix3D(Math.sqrt(spe_std.get(n) )) + "\\\\"
+							);
 						}
-						System.out.println("\\bottomrule\n\\end{tabular}\n\\end{table}");
+				//		System.out.println("\\bottomrule\n\\end{tabular}\n\\end{table}");
 						System.out.println();
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
