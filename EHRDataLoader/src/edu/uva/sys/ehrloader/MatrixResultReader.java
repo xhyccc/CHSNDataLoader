@@ -3,7 +3,10 @@ package edu.uva.sys.ehrloader;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 
 public class MatrixResultReader {
 
@@ -11,10 +14,10 @@ public static void main(String[] args) throws IOException{
 	HashMap<String, Double> error_1 = new HashMap<String, Double>();
 	HashMap<String, Double> error_2 = new HashMap<String, Double>();
 	
-	int sampleSize=500;
+	int sampleSize=200;
 	
 	BufferedReader br = new BufferedReader(
-			new FileReader("/Users/xiongha/Box Sync/CHSN_pattern mining/Jinghe/error-precision-matrix－"+sampleSize+".txt"));
+			new FileReader("/Users/xiongha/Downloads/SDM-LDA/data/error-precision-matrix－"+sampleSize+".txt"));
 	String ln = br.readLine();
 	int count=0;
 	while (ln != null) {
@@ -33,7 +36,9 @@ public static void main(String[] args) throws IOException{
 		ln = br.readLine();
 		count++;
 	}
-	for(String key:error_1.keySet()){
+	List<String> names=new ArrayList<String>(error_1.keySet());
+	Collections.sort(names);
+	for(String key:names){
 	System.out.println(sampleSize+"\t"+key+"\t"+(double)(error_1.get(key))/count+"\t"+(double)(error_2.get(key))/count);
 	}
 	br.close();

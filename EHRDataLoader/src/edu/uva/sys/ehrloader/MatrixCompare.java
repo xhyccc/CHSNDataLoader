@@ -83,13 +83,13 @@ public class MatrixCompare {
 		// double[][] recoveredData = dataRecovery(new NMFRecovery(10), fm, fm,
 		// missingcodes, 0);
 
-		for (int t = 200; t <= 20000; t *= 10) 
+		for (int t = 50; t <= 250; t += 50) 
 		// for (int te = 100; te <= 500; te += 100) {
 		for (int days = 30; days <= 30; days += 30) {
 			// t_size = t;
 			te_size = 1000;
 			try {
-				ps = new PrintStream("/Users/xiongha/Box Sync/CHSN_pattern mining/Jinghe/error-precision-matrix－200.txt");
+				ps = new PrintStream("/Users/xiongha/Box Sync/CHSN_pattern mining/Jinghe/error-precision-matrix－"+t+".txt");
 			} catch (FileNotFoundException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -97,7 +97,7 @@ public class MatrixCompare {
 			
 			String path="/Users/xiongha/Box Sync/CHSN_pattern mining/Jinghe/";
 			
-			for (int r = 0; r < 1; r++) {
+			for (int r = 0; r < 50; r++) {
 				BalanceTTSelection s1 = new BalanceTTSelection(fm, base.getLabels(), t, 10);
 				s1.select();
 
@@ -106,7 +106,7 @@ public class MatrixCompare {
 				mDaehrLDA glassoLDA = new mDaehrLDA(s1.getTrainingSet(), s1.getTrainingLabels(), false);
 				mDaehrLDA nonSparseLDA = new mDaehrLDA(s1.getTrainingSet(), s1.getTrainingLabels(), false);
 
-				BalanceTTSelection ss = new BalanceTTSelection(fm, base.getLabels(), 10000, te_size);
+				BalanceTTSelection ss = new BalanceTTSelection(fm, base.getLabels(), 15000, te_size);
 				ss.select();
 				mDaehrLDA large = new mDaehrLDA(ss.getTrainingSet(), ss.getTrainingLabels(), false);
 
@@ -116,7 +116,7 @@ public class MatrixCompare {
 				double[][] covNonSparse = nonSparseLDA.getNonSparsePrecisionMatrx();
 				double[][] covLarge = large.getSamplePrecisionMatrix();
 				
-				plotAccuracy("sample", covLarge, covLarge);
+				plotAccuracy("sample", covLDA, covLarge);
 			//	plotAccuracy("sample-100-", covLDA[1], covLarge[1]);
 				saveMatrxInFile(path+"large",covLarge,base._codes,map.nameMap);
 				
@@ -126,7 +126,7 @@ public class MatrixCompare {
 					glassoLDA = new mDaehrLDA(s1.getTrainingSet(), s1.getTrainingLabels(), false);
 					nonSparseLDA = new mDaehrLDA(s1.getTrainingSet(), s1.getTrainingLabels(), false);
 					
-					covDaehr = sparseLDA.getSparseCovPrecisionMatrx();
+			//		covDaehr = sparseLDA.getSparseCovPrecisionMatrx();
 					covGlasso = glassoLDA.getGLassoPrecisionMatrx();
 					covNonSparse = nonSparseLDA.getNonSparsePrecisionMatrx();
 
@@ -134,10 +134,10 @@ public class MatrixCompare {
 			//		saveMatrxInFile(path+"sparse-"+ Estimator.lambda+"-"+t,new Matrix(covDaehr).inverse(),base._codes,map.nameMap);
 
 					plotAccuracy("glasso-" + Estimator.lambda, covGlasso, covLarge);
-					saveMatrxInFile(path+"glasso-" + Estimator.lambda+"_"+t,(covGlasso),base._codes,map.nameMap);
+			//		saveMatrxInFile(path+"glasso-" + Estimator.lambda+"_"+t,(covGlasso),base._codes,map.nameMap);
 
 					plotAccuracy("nonsparse-" + Estimator.lambda , covNonSparse, covLarge);
-					saveMatrxInFile(path+"nonsparse-" + Estimator.lambda+"-"+t,(covNonSparse),base._codes,map.nameMap);
+			//		saveMatrxInFile(path+"nonsparse-" + Estimator.lambda+"-"+t,(covNonSparse),base._codes,map.nameMap);
 
 					
 					
