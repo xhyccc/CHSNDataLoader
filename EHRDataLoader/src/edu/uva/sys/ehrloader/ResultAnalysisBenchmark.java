@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Set;
 import java.io.FileReader;
 
-public class ResultAnalysis3 {
+public class ResultAnalysisBenchmark {
 
 	public static HashMap<String, String> nmap = new HashMap<String, String>();
 
@@ -25,8 +25,15 @@ public class ResultAnalysis3 {
 		else
 			return sf;
 	}
+	
+	public static void main(String[] args){
+		String[] strs={"adult1","adult2","adult3","web1","web2","web3"};
+		for(String str:strs){
+			_main(str);
+		}
+	}
 
-	public static void main(String[] args) {
+	public static void _main(String benchmark) {
 
 		for (int te_size : new int[] { 200 }) {
 			HashMap<Integer,HashMap<String, Double>> accs=new HashMap<Integer,HashMap<String, Double>>();
@@ -35,13 +42,11 @@ public class ResultAnalysis3 {
 			HashMap<Integer,HashMap<String, Double>> accs_std=new HashMap<Integer,HashMap<String, Double>>();
 			HashMap<Integer,HashMap<String, Double>> f1s_std=new HashMap<Integer,HashMap<String, Double>>();
 
-			for (int t = 25; t <= 100; t += 25) {
-				System.out.println(
-						//"\\begin{table}\n\\caption{Performance Comparison with " + 
-					"Training Set:"+	t+ "* 2, Testing Set: " + te_size + "*2"
-				);
-			//	System.out.println("\\footnotesize\n\\centering\n\\begin{tabular}{*{5}{l}}\n\\toprule");
-				System.out.println(" \t Accuracy \t F1-Score \t Sensitivity \t Specificity");
+			for (int t = 15; t <= 75; t += 15) {
+				System.out.println("\\begin{table}\n\\caption{Performance Comparison on ``" +benchmark+"'' datasets with Training Set:" + t
+						+ "$\\times$ 2, Testing Set: " + te_size + "$\\times$2}");
+				System.out.println("\\footnotesize\n\\centering\n\\begin{tabular}{*{5}{l}}\n\\toprule");
+				System.out.println(" & Accuracy & F1-Score\\\\");
 
 				for (int days = 90; days <= 90; days += 30) {
 					int t_size = t;
@@ -57,7 +62,7 @@ public class ResultAnalysis3 {
 						f1s.put(t_size, f1);
 
 						BufferedReader br = new BufferedReader(
-								new FileReader("/Users/xiongha/Box Sync/CHSN_pattern mining/Jinghe/desparse-benchmark/accuracy-desparse-web1-"
+								new FileReader("/Users/xiongha/Box Sync/CHSN_pattern mining/Jinghe/benchmark-all/accuracy-desparse-"+benchmark+"-"
 										+ t_size + "-" + te_size + "-" + days + ".txt"));
 						String ln = br.readLine();
 						while (ln != null) {
@@ -80,7 +85,6 @@ public class ResultAnalysis3 {
 								spe.put(lns[0], spe.get(lns[0]) + ((_tn) / (_tn + _fp)));
 								counts.put(lns[0], counts.get(lns[0]) + 1);
 							}
-					//		System.out.println(ln);
 							ln = br.readLine();
 						}
 						br.close();
@@ -95,7 +99,7 @@ public class ResultAnalysis3 {
 
 						
 						br = new BufferedReader(
-								new FileReader("/Users/xiongha/Box Sync/CHSN_pattern mining/Jinghe/desparse-benchmark/accuracy-desparse-web1-"
+								new FileReader("/Users/xiongha/Box Sync/CHSN_pattern mining/Jinghe/benchmark-all/accuracy-desparse-"+benchmark+"-"
 										+ t_size + "-" + te_size + "-" + days + ".txt"));
 						ln = br.readLine();
 						while (ln != null) {
@@ -121,8 +125,6 @@ public class ResultAnalysis3 {
 								spe_std.put(lns[0], spe_std.get(lns[0])
 										+ Math.pow((spe.get(lns[0]) / counts.get(lns[0]) - ((_tn) / (_tn + _fp))), 2));
 							}
-				//			System.out.println(ln);
-
 							ln = br.readLine();
 						}
 						br.close();
@@ -139,23 +141,16 @@ public class ResultAnalysis3 {
 
 						}
 
-				//		System.out.println("\\hline\\multicolumn{5}{c}{  Days in Advance: " + days + "}\\\\\\hline");
-						List<String> namess=new ArrayList<String>(accs.get(25).keySet());
+			//			System.out.println("\\hline\\multicolumn{5}{c}{  Days in Advance: " + days + "}\\\\\\hline");
+						List<String> namess=new ArrayList<String>(accs.get(15).keySet());
 						Collections.sort(namess);
 						for (String n : namess) {
-							System.out.println(n+"\t" + fix3D(acc.get(n)) 
-				//			+ " $\\pm$ "+ fix3D(Math.sqrt(acc_std.get(n))) 
-							+ "\t"+ fix3D(f1.get(n))  
-							//		" $\\pm$ "+ fix3D(Math.sqrt(f1_std.get(n) )) 									
-							+ "\t"+ fix3D(sen.get(n) )
-							//+ " $\\pm$ "
-							//		+ fix3D(Math.sqrt(sen_std.get(n) )) 
-							+ "\t" + fix3D(spe.get(n) ) 
-							//+ " $\\pm$ "
-							//		+ fix3D(Math.sqrt(spe_std.get(n) )) + "\\\\"
-							);
+							System.out.println(n+"&" + fix3D(acc.get(n)) + " $\\pm$ "
+									+ fix3D(Math.sqrt(acc_std.get(n))) + "&"
+									+ fix3D(f1.get(n)) + " $\\pm$ "
+									+ fix3D(Math.sqrt(f1_std.get(n) )) + "\\\\");
 						}
-				//		System.out.println("\\bottomrule\n\\end{tabular}\n\\end{table}");
+						System.out.println("\\bottomrule\n\\end{tabular}\n\\end{table}");
 						System.out.println();
 					} catch (IOException e) {
 						// TODO Auto-generated catch block

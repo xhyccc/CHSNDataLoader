@@ -138,7 +138,7 @@ public class BalanceTTSelection implements TTSelection{
 		}
 		this.testingLabels[j]=this._labels[i];
 	}
-
+	
 
 	@Override
 	public double[][] getTrainingSet() {

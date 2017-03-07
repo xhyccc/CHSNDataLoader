@@ -30,7 +30,7 @@ import edu.uva.sys.ehrloader.ml.BalanceTTSelection;
 import edu.uva.sys.ehrloader.recovery.*;
 import smile.math.matrix.Matrix;
 
-public class MatrixCompare {
+public class GraphCompare {
 
 	public static PrintStream ps = null;
 	public static int t_size = 400;
