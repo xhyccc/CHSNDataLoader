@@ -1,7 +1,5 @@
 package edu.uva.sys.ehrloader;
 
-
-
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
 import java.util.HashMap;
@@ -10,25 +8,31 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import edu.uva.hdstats.Estimator;
-import edu.uva.hdstats.da.AdaboostLRClassifier;
-import edu.uva.hdstats.da.Classifier;
-import edu.uva.hdstats.da.DaehrLDA;
-import edu.uva.hdstats.da.LDA;
-import edu.uva.hdstats.da.LRClassifier;
-import edu.uva.hdstats.da.ODaehrLDA;
-import edu.uva.hdstats.da.OLDA;
-import edu.uva.hdstats.da.OrgLDA;
-import edu.uva.hdstats.da.PDLassoLDA;
-import edu.uva.hdstats.da.PseudoInverse;
-import edu.uva.hdstats.da.SVMClassifier;
-import edu.uva.hdstats.da.ShLDA;
-import edu.uva.hdstats.da.ShrinkageLDA;
-import edu.uva.hdstats.da.mDaehrLDA;
 import edu.uva.libopt.numeric.*;
 import edu.uva.sys.ehrloader.ml.BalanceTTSelection;
+import edu.uva.sys.ehrloader.ml.RandomSampleSelection;
 import edu.uva.sys.ehrloader.recovery.*;
 import smile.math.matrix.Matrix;
+import xiong.hdstats.Estimator;
+import xiong.hdstats.da.AdaboostLRClassifier;
+import xiong.hdstats.da.Classifier;
+import xiong.hdstats.da.DaehrLDA;
+import xiong.hdstats.da.LDA;
+import xiong.hdstats.da.LRClassifier;
+import xiong.hdstats.da.ODaehrLDA;
+import xiong.hdstats.da.OLDA;
+import xiong.hdstats.da.OrgLDA;
+import xiong.hdstats.da.PDLassoLDA;
+import xiong.hdstats.da.PseudoInverse;
+import xiong.hdstats.da.SVMClassifier;
+import xiong.hdstats.da.ShLDA;
+import xiong.hdstats.da.ShrinkageLDA;
+import xiong.hdstats.da.mDaehrLDA;
+import xiong.hdstats.graph.DGLassoGraph;
+import xiong.hdstats.graph.GLassoGraph;
+import xiong.hdstats.graph.GraphEva;
+import xiong.hdstats.graph.SampleGraph;
+import xiong.hdstats.graph.ens.DGLassoWishartGraph;
 
 public class GraphCompare {
 
@@ -52,8 +56,8 @@ public class GraphCompare {
 
 		EHRRecordMap map = new EHRRecordMap("/Users/xiongha/Box Sync/CHSN_pattern mining/Jinghe/mapping.txt");
 
-		EHRecordBase base = ICDLineReader.load(map,
-				"/Users/xiongha/Box Sync/CHSN_pattern mining/Jinghe/non-mh_icd.csv", "x_icdcode", 300000);
+		EHRecordBase base = ICDLineReader.load(map, "/Users/xiongha/Box Sync/CHSN_pattern mining/Jinghe/non-mh_icd.csv",
+				"x_icdcode", 300000);
 
 		EHRecordBase base_2 = ICDLineReader.load(map, "/Users/xiongha/Box Sync/CHSN_pattern mining/Jinghe/icd_MD.csv",
 				"y_icdcode", 300000);
@@ -83,91 +87,234 @@ public class GraphCompare {
 		// double[][] recoveredData = dataRecovery(new NMFRecovery(10), fm, fm,
 		// missingcodes, 0);
 
-		for (int t = 50; t <= 250; t += 50) 
-		// for (int te = 100; te <= 500; te += 100) {
-		for (int days = 30; days <= 30; days += 30) {
-			// t_size = t;
-			te_size = 1000;
+		String path = "/Users/xiongha/Box Sync/CHSN_pattern mining/Jinghe/";
+
+		// for (int r = 0; r < 50; r++) {
+		BalanceTTSelection s1 = new BalanceTTSelection(fm, base.getLabels(), 20000, 1);
+		s1.select();
+		//RandomSampleSelection rss = new RandomSampleSelection(s1.getTrainingSet(), s1.getTrainingLabels(), 0, 10000);
+		double[][] negLarge = s1.negativeSamples;
+		System.out.println("Negative Samples OUT");
+
+	//	RandomSampleSelection rsss = new RandomSampleSelection(s1.getTrainingSet(), s1.getTrainingLabels(), 1, 10000);
+		double[][] posLarge = s1.postiveSamples;
+		System.out.println("Positive Samples OUT");
+
+		SampleGraph negTruth = new SampleGraph(negLarge);
+		SampleGraph posTruth = new SampleGraph(posLarge);
+		for (double thrr = 4.72; thrr <= 4.72; thrr += 0.001) {
+			int[][] diffTruth = posTruth.adaptiveThresholdingDiff(thrr/Math.sqrt(20000), negTruth);
 			try {
-				ps = new PrintStream("/Users/xiongha/Box Sync/CHSN_pattern mining/Jinghe/error-precision-matrix-"+t+".txt");
+				ps = new PrintStream("/Users/xiongha/Box Sync/CHSN_pattern mining/Jinghe/graph-threshold-"+thrr+".txt");
 			} catch (FileNotFoundException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			
-			String path="/Users/xiongha/Box Sync/CHSN_pattern mining/Jinghe/";
-			
-			for (int r = 0; r < 50; r++) {
-				BalanceTTSelection s1 = new BalanceTTSelection(fm, base.getLabels(), t, 10);
-				s1.select();
+			for (int t = 250; t < 1000; t += 50) {
+				for (int r = 0; r < 20; r++) {
+					RandomSampleSelection neg = new RandomSampleSelection(negLarge, t);
+					RandomSampleSelection pos = new RandomSampleSelection(posLarge, t);
+					double[][] negSmall = neg.getDataSet();
+					double[][] posSmall = pos.getDataSet();
+					double thr=thrr/Math.sqrt(t);
+					SampleGraph negSample = new SampleGraph(negSmall);
+					new GraphEva(negTruth.adaptiveThresholding(thr),negSample.adaptiveThresholding(thr)).print("sample-neg\t"+t, ps);
+					SampleGraph posSample = new SampleGraph(posSmall);
+					new GraphEva(posTruth.adaptiveThresholding(thr),posSample.adaptiveThresholding(thr)).print("sample-pos\t"+t, ps);
+					int[][] diffSample = posSample.adaptiveThresholdingDiff(thr, negSample);
+					new GraphEva(diffTruth,diffSample).print("sample-diff\t"+t, ps);
 
-				mDaehrLDA LDA = new mDaehrLDA(s1.getTrainingSet(), s1.getTrainingLabels(), false);
-				mDaehrLDA sparseLDA = new mDaehrLDA(s1.getTrainingSet(), s1.getTrainingLabels(), false);
-				mDaehrLDA glassoLDA = new mDaehrLDA(s1.getTrainingSet(), s1.getTrainingLabels(), false);
-				mDaehrLDA nonSparseLDA = new mDaehrLDA(s1.getTrainingSet(), s1.getTrainingLabels(), false);
-
-				BalanceTTSelection ss = new BalanceTTSelection(fm, base.getLabels(), 15000, te_size);
-				ss.select();
-				mDaehrLDA large = new mDaehrLDA(ss.getTrainingSet(), ss.getTrainingLabels(), false);
-
-				double[][]	covLDA = LDA.getSamplePrecisionMatrix();
-				double[][] covDaehr = sparseLDA.getSparseCovPrecisionMatrx();
-				double[][] covGlasso = glassoLDA.getGLassoPrecisionMatrx();
-				double[][] covNonSparse = nonSparseLDA.getNonSparsePrecisionMatrx();
-				double[][] covLarge = large.getSamplePrecisionMatrix();
-				
-				plotAccuracy("sample", covLDA, covLarge);
-			//	plotAccuracy("sample-100-", covLDA[1], covLarge[1]);
-				saveMatrxInFile(path+"large",covLarge,base._codes,map.nameMap);
-				
-				Estimator.lambda = 100;
-				for (int i = 0; i < 3; i++) {
-					sparseLDA = new mDaehrLDA(s1.getTrainingSet(), s1.getTrainingLabels(), false);
-					glassoLDA = new mDaehrLDA(s1.getTrainingSet(), s1.getTrainingLabels(), false);
-					nonSparseLDA = new mDaehrLDA(s1.getTrainingSet(), s1.getTrainingLabels(), false);
-					
-			//		covDaehr = sparseLDA.getSparseCovPrecisionMatrx();
-					covGlasso = glassoLDA.getGLassoPrecisionMatrx();
-					covNonSparse = nonSparseLDA.getNonSparsePrecisionMatrx();
-
-			//		plotAccuracy("sparse-" + Estimator.lambda , covDaehr, covLarge);
-			//		saveMatrxInFile(path+"sparse-"+ Estimator.lambda+"-"+t,new Matrix(covDaehr).inverse(),base._codes,map.nameMap);
-
-					plotAccuracy("glasso-" + Estimator.lambda, covGlasso, covLarge);
-			//		saveMatrxInFile(path+"glasso-" + Estimator.lambda+"_"+t,(covGlasso),base._codes,map.nameMap);
-
-					plotAccuracy("nonsparse-" + Estimator.lambda , covNonSparse, covLarge);
-			//		saveMatrxInFile(path+"nonsparse-" + Estimator.lambda+"-"+t,(covNonSparse),base._codes,map.nameMap);
+					GLassoGraph negGlasso = new GLassoGraph(negSmall,0.1);
+					new GraphEva(negTruth.adaptiveThresholding(thr),negGlasso.adaptiveThresholding(thr)).print("glasso-0.1-neg\t"+t, ps);
+					GLassoGraph posGlasso = new GLassoGraph(posSmall,0.1);
+					new GraphEva(posTruth.adaptiveThresholding(thr),posGlasso.adaptiveThresholding(thr)).print("glasso-0.1-pos\t"+t, ps);
+					int[][] diffGlasso = posGlasso.adaptiveThresholdingDiff(thr, negGlasso);
+					new GraphEva(diffTruth,diffGlasso).print("glasso-0.1-diff\t"+t, ps);
 
 					
 					
-					Estimator.lambda *= 0.1;
+					
+					DGLassoGraph negDGLasso = new DGLassoGraph(negSmall,0.1);
+					new GraphEva(negTruth.adaptiveThresholding(thr),negDGLasso.adaptiveThresholding(thr)).print("dglasso-0.1-neg\t"+t, ps);
+					DGLassoGraph posDGLasso = new DGLassoGraph(posSmall,0.1);
+					new GraphEva(posTruth.adaptiveThresholding(thr),posDGLasso.adaptiveThresholding(thr)).print("dglasso-0.1-pos\t"+t, ps);
+					int[][] diffDGLasso = posDGLasso.adaptiveThresholdingDiff(thr, negDGLasso);
+					new GraphEva(diffTruth,diffDGLasso).print("dglasso-0.1-diff\t"+t, ps);
+
+					
+					negGlasso = new GLassoGraph(negSmall,1.0);
+					new GraphEva(negTruth.adaptiveThresholding(thr),negGlasso.adaptiveThresholding(thr)).print("glasso-1.0-neg\t"+t, ps);
+					posGlasso = new GLassoGraph(posSmall,1.0);
+					new GraphEva(posTruth.adaptiveThresholding(thr),posGlasso.adaptiveThresholding(thr)).print("glasso-1.0-pos\t"+t, ps);
+					diffGlasso = posGlasso.adaptiveThresholdingDiff(thr, negGlasso);
+					new GraphEva(diffTruth,diffGlasso).print("glasso-1.0-diff\t"+t, ps);
+
+					
+					negDGLasso = new DGLassoGraph(negSmall,1.0);
+					new GraphEva(negTruth.adaptiveThresholding(thr),negDGLasso.adaptiveThresholding(thr)).print("dglasso-1.0-neg\t"+t, ps);
+					posDGLasso = new DGLassoGraph(posSmall,1.0);
+					new GraphEva(posTruth.adaptiveThresholding(thr),posDGLasso.adaptiveThresholding(thr)).print("dglasso-1.0-pos\t"+t, ps);
+					diffDGLasso = posDGLasso.adaptiveThresholdingDiff(thr, negDGLasso);
+					new GraphEva(diffTruth,diffDGLasso).print("dglasso-1.0-diff\t"+t, ps);
+
+					
+					negGlasso = new GLassoGraph(negSmall,10.0);
+					new GraphEva(negTruth.adaptiveThresholding(thr),negGlasso.adaptiveThresholding(thr)).print("glasso-10.1-neg\t"+t, ps);
+					posGlasso = new GLassoGraph(posSmall,10.0);
+					new GraphEva(posTruth.adaptiveThresholding(thr),posGlasso.adaptiveThresholding(thr)).print("glasso-10.0-pos\t"+t, ps);
+					diffGlasso = posGlasso.adaptiveThresholdingDiff(thr, negGlasso);
+					new GraphEva(diffTruth,diffGlasso).print("glasso-10.0-diff\t"+t, ps);
+
+					
+					negDGLasso = new DGLassoGraph(negSmall,10.0);
+					new GraphEva(negTruth.adaptiveThresholding(thr),negDGLasso.adaptiveThresholding(thr)).print("dglasso-10.0-neg\t"+t, ps);
+					posDGLasso = new DGLassoGraph(posSmall,10.0);
+					new GraphEva(posTruth.adaptiveThresholding(thr),posDGLasso.adaptiveThresholding(thr)).print("dglasso-10.0-pos\t"+t, ps);
+					diffDGLasso = posDGLasso.adaptiveThresholdingDiff(thr, negDGLasso);
+					new GraphEva(diffTruth,diffDGLasso).print("dglasso-10.0-diff\t"+t, ps);
+					
+					DGLassoWishartGraph negWishart=new DGLassoWishartGraph(negSmall,0.1,100);
+					DGLassoWishartGraph posWishart=new DGLassoWishartGraph(posSmall,0.1,100);
+					new GraphEva(negTruth.adaptiveThresholding(thr),negWishart.adaptiveThresholding(thr,1000)).print("wishart-0.1-100-1000-neg\t"+t, ps);
+					new GraphEva(posTruth.adaptiveThresholding(thr),posWishart.adaptiveThresholding(thr,1000)).print("wishart-0.1-100-1000-pos\t"+t, ps);
+					int[][] diffWishart = posWishart.adaptiveThresholdingDiff(thr, 100, negWishart);
+					new GraphEva(diffTruth,diffWishart).print("wishart-0.1-100-1000-100-diff\t"+t, ps);
+
+					diffWishart = posWishart.adaptiveThresholdingDiff(thr, 200, negWishart);
+					new GraphEva(diffTruth,diffWishart).print("wishart-0.1-100-1000-200-diff\t"+t, ps);
+
+					diffWishart = posWishart.adaptiveThresholdingDiff(thr, 300, negWishart);
+					new GraphEva(diffTruth,diffWishart).print("wishart-0.1-100-1000-300-diff\t"+t, ps);
+					
+					new GraphEva(negTruth.adaptiveThresholding(thr),negWishart.adaptiveThresholding(thr,1500)).print("wishart-0.1-100-1500-neg\t"+t, ps);
+					new GraphEva(posTruth.adaptiveThresholding(thr),posWishart.adaptiveThresholding(thr,1500)).print("wishart-0.1-100-1500-pos\t"+t, ps);
+					diffWishart = posWishart.adaptiveThresholdingDiff(thr, 100, negWishart);
+					new GraphEva(diffTruth,diffWishart).print("wishart-0.1-100-1500-100-diff\t"+t, ps);
+
+					diffWishart = posWishart.adaptiveThresholdingDiff(thr, 200, negWishart);
+					new GraphEva(diffTruth,diffWishart).print("wishart-0.1-100-1500-200-diff\t"+t, ps);
+
+					diffWishart = posWishart.adaptiveThresholdingDiff(thr, 300, negWishart);
+					new GraphEva(diffTruth,diffWishart).print("wishart-0.1-100-1500-300-diff\t"+t, ps);
+					
+					
+					new GraphEva(negTruth.adaptiveThresholding(thr),negWishart.adaptiveThresholding(thr,60)).print("wishart-0.1-100-2000-neg\t"+t, ps);
+					new GraphEva(posTruth.adaptiveThresholding(thr),posWishart.adaptiveThresholding(thr,60)).print("wishart-0.1-100-2000-pos\t"+t, ps);
+					diffWishart = posWishart.adaptiveThresholdingDiff(thr, 100, negWishart);
+					new GraphEva(diffTruth,diffWishart).print("wishart-0.1-100-2000-100-diff\t"+t, ps);
+
+					diffWishart = posWishart.adaptiveThresholdingDiff(thr, 200, negWishart);
+					new GraphEva(diffTruth,diffWishart).print("wishart-0.1-100-2000-200-diff\t"+t, ps);
+
+					diffWishart = posWishart.adaptiveThresholdingDiff(thr, 300, negWishart);
+					new GraphEva(diffTruth,diffWishart).print("wishart-0.1-100-2000-300-diff\t"+t, ps);
+					
+
+					new GraphEva(negTruth.adaptiveThresholding(thr),negWishart.adaptiveThresholding(thr,80)).print("wishart-0.1-100-2500-neg\t"+t, ps);
+					new GraphEva(posTruth.adaptiveThresholding(thr),posWishart.adaptiveThresholding(thr,80)).print("wishart-0.1-100-2500-pos\t"+t, ps);
+					diffWishart = posWishart.adaptiveThresholdingDiff(thr, 100, negWishart);
+					new GraphEva(diffTruth,diffWishart).print("wishart-0.1-100-2500-100-diff\t"+t, ps);
+
+					diffWishart = posWishart.adaptiveThresholdingDiff(thr, 200, negWishart);
+					new GraphEva(diffTruth,diffWishart).print("wishart-0.1-100-2500-200-diff\t"+t, ps);
+
+					diffWishart = posWishart.adaptiveThresholdingDiff(thr, 300, negWishart);
+					new GraphEva(diffTruth,diffWishart).print("wishart-0.1-100-2500-300-diff\t"+t, ps);
+					
+
+					new GraphEva(negTruth.adaptiveThresholding(thr),negWishart.adaptiveThresholding(thr,100)).print("wishart-0.1-100-3000-neg\t"+t, ps);
+					new GraphEva(posTruth.adaptiveThresholding(thr),posWishart.adaptiveThresholding(thr,100)).print("wishart-0.1-100-3000-pos\t"+t, ps);
+					diffWishart = posWishart.adaptiveThresholdingDiff(thr, 100, negWishart);
+					new GraphEva(diffTruth,diffWishart).print("wishart-0.1-100-3000-100-diff\t"+t, ps);
+
+					diffWishart = posWishart.adaptiveThresholdingDiff(thr, 200, negWishart);
+					new GraphEva(diffTruth,diffWishart).print("wishart-0.1-100-3000-200-diff\t"+t, ps);
+
+					diffWishart = posWishart.adaptiveThresholdingDiff(thr, 300, negWishart);
+					new GraphEva(diffTruth,diffWishart).print("wishart-0.1-100-3000-300-diff\t"+t, ps);
+
+
+					
+					negWishart=new DGLassoWishartGraph(negSmall,1.0,100);
+					posWishart=new DGLassoWishartGraph(posSmall,1.0,100);
+					new GraphEva(negTruth.adaptiveThresholding(thr),negWishart.adaptiveThresholding(thr,1000)).print("wishart-1.0-100-1000-neg\t"+t, ps);
+					new GraphEva(posTruth.adaptiveThresholding(thr),posWishart.adaptiveThresholding(thr,1000)).print("wishart-1.0-100-1000-pos\t"+t, ps);
+					new GraphEva(negTruth.adaptiveThresholding(thr),negWishart.adaptiveThresholding(thr,1500)).print("wishart-1.0-100-1500-neg\t"+t, ps);
+					new GraphEva(posTruth.adaptiveThresholding(thr),posWishart.adaptiveThresholding(thr,1500)).print("wishart-1.0-100-1500-pos\t"+t, ps);
+					new GraphEva(negTruth.adaptiveThresholding(thr),negWishart.adaptiveThresholding(thr,2000)).print("wishart-1.0-100-2000-neg\t"+t, ps);
+					new GraphEva(posTruth.adaptiveThresholding(thr),posWishart.adaptiveThresholding(thr,2000)).print("wishart-1.0-100-2000-pos\t"+t, ps);
+					new GraphEva(negTruth.adaptiveThresholding(thr),negWishart.adaptiveThresholding(thr,2500)).print("wishart-1.0-100-2500-neg\t"+t, ps);
+					new GraphEva(posTruth.adaptiveThresholding(thr),posWishart.adaptiveThresholding(thr,2500)).print("wishart-1.0-100-2500-pos\t"+t, ps);
+					
+					negWishart=new DGLassoWishartGraph(negSmall,10,100);
+					posWishart=new DGLassoWishartGraph(posSmall,10,100);
+					new GraphEva(negTruth.adaptiveThresholding(thr),negWishart.adaptiveThresholding(thr,1000)).print("wishart-10-100-1000-neg\t"+t, ps);
+					new GraphEva(posTruth.adaptiveThresholding(thr),posWishart.adaptiveThresholding(thr,1000)).print("wishart-10-100-1000-pos\t"+t, ps);
+					new GraphEva(negTruth.adaptiveThresholding(thr),negWishart.adaptiveThresholding(thr,1500)).print("wishart-10-100-1500-neg\t"+t, ps);
+					new GraphEva(posTruth.adaptiveThresholding(thr),posWishart.adaptiveThresholding(thr,1500)).print("wishart-10-100-1500-pos\t"+t, ps);
+					new GraphEva(negTruth.adaptiveThresholding(thr),negWishart.adaptiveThresholding(thr,2000)).print("wishart-10-100-2000-neg\t"+t, ps);
+					new GraphEva(posTruth.adaptiveThresholding(thr),posWishart.adaptiveThresholding(thr,2000)).print("wishart-10-100-2000-pos\t"+t, ps);
+					new GraphEva(negTruth.adaptiveThresholding(thr),negWishart.adaptiveThresholding(thr,2500)).print("wishart-10-100-2500-neg\t"+t, ps);
+					new GraphEva(posTruth.adaptiveThresholding(thr),posWishart.adaptiveThresholding(thr,2500)).print("wishart-10-100-2500-pos\t"+t, ps);
+					new GraphEva(negTruth.adaptiveThresholding(thr),negWishart.adaptiveThresholding(thr,3000)).print("wishart-10-100-3000-neg\t"+t, ps);
+					new GraphEva(posTruth.adaptiveThresholding(thr),posWishart.adaptiveThresholding(thr,3000)).print("wishart-10-100-3000-pos\t"+t, ps);
+
+					negWishart=new DGLassoWishartGraph(negSmall,0.1,200);
+					posWishart=new DGLassoWishartGraph(posSmall,0.1,200);
+					new GraphEva(negTruth.adaptiveThresholding(thr),negWishart.adaptiveThresholding(thr,1000)).print("wishart-0.1-200-1000-neg\t"+t, ps);
+					new GraphEva(posTruth.adaptiveThresholding(thr),posWishart.adaptiveThresholding(thr,1000)).print("wishart-0.1-200-1000-pos\t"+t, ps);
+					new GraphEva(negTruth.adaptiveThresholding(thr),negWishart.adaptiveThresholding(thr,1500)).print("wishart-0.1-200-1500-neg\t"+t, ps);
+					new GraphEva(posTruth.adaptiveThresholding(thr),posWishart.adaptiveThresholding(thr,1500)).print("wishart-0.1-200-1500-pos\t"+t, ps);
+					new GraphEva(negTruth.adaptiveThresholding(thr),negWishart.adaptiveThresholding(thr,2000)).print("wishart-0.1-200-2000-neg\t"+t, ps);
+					new GraphEva(posTruth.adaptiveThresholding(thr),posWishart.adaptiveThresholding(thr,2000)).print("wishart-0.1-200-2000-pos\t"+t, ps);
+					new GraphEva(negTruth.adaptiveThresholding(thr),negWishart.adaptiveThresholding(thr,2500)).print("wishart-0.1-200-2500-neg\t"+t, ps);
+					new GraphEva(posTruth.adaptiveThresholding(thr),posWishart.adaptiveThresholding(thr,2500)).print("wishart-0.1-200-2500-pos\t"+t, ps);
+					new GraphEva(negTruth.adaptiveThresholding(thr),negWishart.adaptiveThresholding(thr,3000)).print("wishart-0.1-200-3000-neg\t"+t, ps);
+					new GraphEva(posTruth.adaptiveThresholding(thr),posWishart.adaptiveThresholding(thr,3000)).print("wishart-0.1-200-3000-pos\t"+t, ps);
+					
+					
+					negWishart=new DGLassoWishartGraph(negSmall,1.0,200);
+					posWishart=new DGLassoWishartGraph(posSmall,1.0,200);
+					new GraphEva(negTruth.adaptiveThresholding(thr),negWishart.adaptiveThresholding(thr,1000)).print("wishart-1.0-200-1000-neg\t"+t, ps);
+					new GraphEva(posTruth.adaptiveThresholding(thr),posWishart.adaptiveThresholding(thr,1000)).print("wishart-1.0-200-1000-pos\t"+t, ps);
+					new GraphEva(negTruth.adaptiveThresholding(thr),negWishart.adaptiveThresholding(thr,1500)).print("wishart-1.0-200-1500-neg\t"+t, ps);
+					new GraphEva(posTruth.adaptiveThresholding(thr),posWishart.adaptiveThresholding(thr,1500)).print("wishart-1.0-200-1500-pos\t"+t, ps);
+					new GraphEva(negTruth.adaptiveThresholding(thr),negWishart.adaptiveThresholding(thr,2000)).print("wishart-1.0-200-2000-neg\t"+t, ps);
+					new GraphEva(posTruth.adaptiveThresholding(thr),posWishart.adaptiveThresholding(thr,2000)).print("wishart-1.0-200-2000-pos\t"+t, ps);
+					new GraphEva(negTruth.adaptiveThresholding(thr),negWishart.adaptiveThresholding(thr,2500)).print("wishart-1.0-200-2500-neg\t"+t, ps);
+					new GraphEva(posTruth.adaptiveThresholding(thr),posWishart.adaptiveThresholding(thr,2500)).print("wishart-1.0-200-2500-pos\t"+t, ps);
+					new GraphEva(negTruth.adaptiveThresholding(thr),negWishart.adaptiveThresholding(thr,2500)).print("wishart-1.0-200-2500-neg\t"+t, ps);
+					new GraphEva(posTruth.adaptiveThresholding(thr),posWishart.adaptiveThresholding(thr,2500)).print("wishart-1.0-200-2500-pos\t"+t, ps);
+
+					
+					negWishart=new DGLassoWishartGraph(negSmall,10,200);
+					posWishart=new DGLassoWishartGraph(posSmall,10,200);
+					new GraphEva(negTruth.adaptiveThresholding(thr),negWishart.adaptiveThresholding(thr,1000)).print("wishart-10-200-1000-neg\t"+t, ps);
+					new GraphEva(posTruth.adaptiveThresholding(thr),posWishart.adaptiveThresholding(thr,1000)).print("wishart-10-200-1000-pos\t"+t, ps);
+					new GraphEva(negTruth.adaptiveThresholding(thr),negWishart.adaptiveThresholding(thr,1500)).print("wishart-10-200-1500-neg\t"+t, ps);
+					new GraphEva(posTruth.adaptiveThresholding(thr),posWishart.adaptiveThresholding(thr,1500)).print("wishart-10-200-1500-pos\t"+t, ps);
+					new GraphEva(negTruth.adaptiveThresholding(thr),negWishart.adaptiveThresholding(thr,2000)).print("wishart-10-200-2000-neg\t"+t, ps);
+					new GraphEva(posTruth.adaptiveThresholding(thr),posWishart.adaptiveThresholding(thr,2000)).print("wishart-10-200-2000-pos\t"+t, ps);
+					new GraphEva(negTruth.adaptiveThresholding(thr),negWishart.adaptiveThresholding(thr,2500)).print("wishart-10-200-2500-neg\t"+t, ps);
+					new GraphEva(posTruth.adaptiveThresholding(thr),posWishart.adaptiveThresholding(thr,2500)).print("wishart-10-200-2500-pos\t"+t, ps);
+					new GraphEva(negTruth.adaptiveThresholding(thr),negWishart.adaptiveThresholding(thr,3000)).print("wishart-10-200-3000-neg\t"+t, ps);
+					new GraphEva(posTruth.adaptiveThresholding(thr),posWishart.adaptiveThresholding(thr,3000)).print("wishart-10-200-3000-pos\t"+t, ps);
+					
 				}
-
-				mDaehrLDA.slambda = 0.75;
-				for (int i = 0; i < 4; i++) {
-					sparseLDA = new mDaehrLDA(s1.getTrainingSet(), s1.getTrainingLabels(), false);
-					covDaehr = sparseLDA.getShrinkagedCovPrecisionMatrx();
-					plotAccuracy("shrinkage-"+mDaehrLDA.slambda, covDaehr, covLarge);
-					saveMatrxInFile(path+"shrinkage-"+mDaehrLDA.slambda+"-"+t,covDaehr,base._codes,map.nameMap);
-
-					mDaehrLDA.slambda -=0.25;
-				}
-
 			}
-
+			// }
 		}
-		// }
 	}
+	// }
 
 	// }
-	
-	private static void saveMatrxInFile(String path, double[][] matrx, List<String> codes, Map<String, String> map){
+
+	private static void saveMatrxInFile(String path, double[][] matrx, List<String> codes, Map<String, String> map) {
 		try {
-			PrintStream ps=new PrintStream(path+".txt");
-			for(int i=0;i<matrx.length;i++){
-				for(int j=0;j<matrx[i].length;j++){
-					ps.println(map.get(codes.get(i))+"\t"+map.get(codes.get(j))+"\t"+matrx[i][j]);
+			PrintStream ps = new PrintStream(path + ".txt");
+			for (int i = 0; i < matrx.length; i++) {
+				for (int j = 0; j < matrx[i].length; j++) {
+					ps.println(map.get(codes.get(i)) + "\t" + map.get(codes.get(j)) + "\t" + matrx[i][j]);
 				}
 			}
 			ps.close();
@@ -175,7 +322,7 @@ public class GraphCompare {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		}
+	}
 
 	private static void accuracy(String name, double[][] data, int[] labels, Classifier<double[]> classifier, long t1,
 			long t2) {

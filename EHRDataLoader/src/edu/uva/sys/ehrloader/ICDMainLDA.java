@@ -6,15 +6,15 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
-import edu.uva.hdstats.Estimator;
-import edu.uva.hdstats.da.Classifier;
-import edu.uva.hdstats.da.LDA;
-import edu.uva.hdstats.da.OrgLDA;
-import edu.uva.hdstats.da.PDLassoLDA;
-import edu.uva.hdstats.da.ShrinkageLDA;
 import edu.uva.libopt.numeric.*;
 import edu.uva.sys.ehrloader.ml.BalanceTTSelection;
 import edu.uva.sys.ehrloader.recovery.*;
+import xiong.hdstats.Estimator;
+import xiong.hdstats.da.Classifier;
+import xiong.hdstats.da.LDA;
+import xiong.hdstats.da.OrgLDA;
+import xiong.hdstats.da.PDLassoLDA;
+import xiong.hdstats.da.ShrinkageLDA;
 
 public class ICDMainLDA {
 

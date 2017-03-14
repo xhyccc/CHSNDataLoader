@@ -1,7 +1,5 @@
 package edu.uva.sys.ehrloader;
 
-
-
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
 import java.util.HashMap;
@@ -12,6 +10,7 @@ import java.util.Set;
 
 import edu.uva.libopt.numeric.*;
 import edu.uva.sys.ehrloader.ml.BalanceTTSelection;
+import edu.uva.sys.ehrloader.ml.RandomSampleSelection;
 import edu.uva.sys.ehrloader.recovery.*;
 import smile.math.matrix.Matrix;
 import xiong.hdstats.Estimator;
@@ -29,8 +28,14 @@ import xiong.hdstats.da.SVMClassifier;
 import xiong.hdstats.da.ShLDA;
 import xiong.hdstats.da.ShrinkageLDA;
 import xiong.hdstats.da.mDaehrLDA;
+import xiong.hdstats.graph.DGLassoGraph;
+import xiong.hdstats.graph.GLassoGraph;
+import xiong.hdstats.graph.GraphEva;
+import xiong.hdstats.graph.SampleGraph;
+import xiong.hdstats.graph.ens.SampleWishartGraph;
+import xiong.hdstats.graph.ens.DGLassoWishartGraph;
 
-public class MatrixCompare {
+public class SampleGraphCompare2 {
 
 	public static PrintStream ps = null;
 	public static int t_size = 400;
@@ -52,8 +57,8 @@ public class MatrixCompare {
 
 		EHRRecordMap map = new EHRRecordMap("/Users/xiongha/Box Sync/CHSN_pattern mining/Jinghe/mapping.txt");
 
-		EHRecordBase base = ICDLineReader.load(map,
-				"/Users/xiongha/Box Sync/CHSN_pattern mining/Jinghe/non-mh_icd.csv", "x_icdcode", 300000);
+		EHRecordBase base = ICDLineReader.load(map, "/Users/xiongha/Box Sync/CHSN_pattern mining/Jinghe/non-mh_icd.csv",
+				"x_icdcode", 300000);
 
 		EHRecordBase base_2 = ICDLineReader.load(map, "/Users/xiongha/Box Sync/CHSN_pattern mining/Jinghe/icd_MD.csv",
 				"y_icdcode", 300000);
@@ -83,91 +88,103 @@ public class MatrixCompare {
 		// double[][] recoveredData = dataRecovery(new NMFRecovery(10), fm, fm,
 		// missingcodes, 0);
 
-		for (int t = 50; t <= 250; t += 50) 
-		// for (int te = 100; te <= 500; te += 100) {
-		for (int days = 30; days <= 30; days += 30) {
-			// t_size = t;
-			te_size = 1000;
+		String path = "/Users/xiongha/Box Sync/CHSN_pattern mining/Jinghe/";
+
+		// for (int r = 0; r < 50; r++) {
+		BalanceTTSelection s1 = new BalanceTTSelection(fm, base.getLabels(), 20000, 1);
+		s1.select();
+		// RandomSampleSelection rss = new
+		// RandomSampleSelection(s1.getTrainingSet(), s1.getTrainingLabels(), 0,
+		// 10000);
+		double[][] negLarge = s1.negativeSamples;
+		System.out.println("Negative Samples OUT");
+
+		// RandomSampleSelection rsss = new
+		// RandomSampleSelection(s1.getTrainingSet(), s1.getTrainingLabels(), 1,
+		// 10000);
+		double[][] posLarge = s1.postiveSamples;
+		System.out.println("Positive Samples OUT");
+
+		DGLassoGraph negTruth = new DGLassoGraph(negLarge, 0.1);
+		DGLassoGraph posTruth = new DGLassoGraph(posLarge, 0.1);
+		for (double thrr = 4.72; thrr <= 4.72; thrr += 0.001) {
+			int[][] diffTruth = posTruth.adaptiveThresholdingDiff(thrr / Math.sqrt(20000), negTruth);
 			try {
-				ps = new PrintStream("/Users/xiongha/Box Sync/CHSN_pattern mining/Jinghe/error-precision-matrix-"+t+".txt");
+				ps = new PrintStream(
+						"/Users/xiongha/Box Sync/CHSN_pattern mining/Jinghe/sgraph-threshold-" + thrr + "-2.txt");
 			} catch (FileNotFoundException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			
-			String path="/Users/xiongha/Box Sync/CHSN_pattern mining/Jinghe/";
-			
-			for (int r = 0; r < 50; r++) {
-				BalanceTTSelection s1 = new BalanceTTSelection(fm, base.getLabels(), t, 10);
-				s1.select();
+			for (int t = 250; t < 1000; t += 250) {
+				for (int r = 0; r < 10; r++) {
+					RandomSampleSelection neg = new RandomSampleSelection(negLarge, t);
+					RandomSampleSelection pos = new RandomSampleSelection(posLarge, t);
+					double[][] negSmall = neg.getDataSet();
+					double[][] posSmall = pos.getDataSet();
+					double thr = thrr / Math.sqrt(t);
+					SampleGraph negSample = new SampleGraph(negSmall);
+				//	new GraphEva(negTruth.adaptiveThresholding(thrr / Math.sqrt(20000)),
+				//			negSample.adaptiveThresholding(thr)).print("sample-neg\t" + t, ps);
+					SampleGraph posSample = new SampleGraph(posSmall);
+					new GraphEva(posTruth.adaptiveThresholding(thrr / Math.sqrt(20000)),
+							posSample.adaptiveThresholding(thr)).print("sample-pos\t" + t, ps);
+					int[][] diffSample = posSample.adaptiveThresholdingDiff(thr, negSample);
+					new GraphEva(diffTruth, diffSample).print("sample-diff\t" + t, ps);
 
-				mDaehrLDA LDA = new mDaehrLDA(s1.getTrainingSet(), s1.getTrainingLabels(), false);
-				mDaehrLDA sparseLDA = new mDaehrLDA(s1.getTrainingSet(), s1.getTrainingLabels(), false);
-				mDaehrLDA glassoLDA = new mDaehrLDA(s1.getTrainingSet(), s1.getTrainingLabels(), false);
-				mDaehrLDA nonSparseLDA = new mDaehrLDA(s1.getTrainingSet(), s1.getTrainingLabels(), false);
+					for (double lbd = 0.01; lbd <= 10; lbd *= 10) {
+						GLassoGraph negGlasso = new GLassoGraph(negSmall, lbd);
+				//		new GraphEva(negTruth.adaptiveThresholding(thrr / Math.sqrt(20000)),
+				//				negGlasso.adaptiveThresholding(thr)).print("glasso" + lbd + "-neg\t" + t, ps);
+						GLassoGraph posGlasso = new GLassoGraph(posSmall, lbd);
+						new GraphEva(posTruth.adaptiveThresholding(thrr / Math.sqrt(20000)),
+								posGlasso.adaptiveThresholding(thr)).print("glasso" + lbd + "-0.1-pos\t" + t, ps);
+						int[][] diffGlasso = posGlasso.adaptiveThresholdingDiff(thr, negGlasso);
+						new GraphEva(diffTruth, diffGlasso).print("glasso-" + lbd + "-diff\t" + t, ps);
 
-				BalanceTTSelection ss = new BalanceTTSelection(fm, base.getLabels(), 15000, te_size);
-				ss.select();
-				mDaehrLDA large = new mDaehrLDA(ss.getTrainingSet(), ss.getTrainingLabels(), false);
+						DGLassoGraph negDGLasso = new DGLassoGraph(negSmall, lbd);
+				//		new GraphEva(negTruth.adaptiveThresholding(thrr / Math.sqrt(20000)),
+				//				negDGLasso.adaptiveThresholding(thr)).print("dglasso-" + lbd + "-neg\t" + t, ps);
+						DGLassoGraph posDGLasso = new DGLassoGraph(posSmall, lbd);
+						new GraphEva(posTruth.adaptiveThresholding(thrr / Math.sqrt(20000)),
+								posDGLasso.adaptiveThresholding(thr)).print("dglasso-" + lbd + "-pos\t" + t, ps);
+						int[][] diffDGLasso = posDGLasso.adaptiveThresholdingDiff(thr, negDGLasso);
+						new GraphEva(diffTruth, diffDGLasso).print("dglasso-" + lbd + "-diff\t" + t, ps);
+					}
 
-				double[][]	covLDA = LDA.getSamplePrecisionMatrix();
-				double[][] covDaehr = sparseLDA.getSparseCovPrecisionMatrx();
-				double[][] covGlasso = glassoLDA.getGLassoPrecisionMatrx();
-				double[][] covNonSparse = nonSparseLDA.getNonSparsePrecisionMatrx();
-				double[][] covLarge = large.getSamplePrecisionMatrix();
-				
-				plotAccuracy("sample", covLDA, covLarge);
-			//	plotAccuracy("sample-100-", covLDA[1], covLarge[1]);
-				saveMatrxInFile(path+"large",covLarge,base._codes,map.nameMap);
-				
-				Estimator.lambda = 100;
-				for (int i = 0; i < 3; i++) {
-					sparseLDA = new mDaehrLDA(s1.getTrainingSet(), s1.getTrainingLabels(), false);
-					glassoLDA = new mDaehrLDA(s1.getTrainingSet(), s1.getTrainingLabels(), false);
-					nonSparseLDA = new mDaehrLDA(s1.getTrainingSet(), s1.getTrainingLabels(), false);
-					
-			//		covDaehr = sparseLDA.getSparseCovPrecisionMatrx();
-					covGlasso = glassoLDA.getGLassoPrecisionMatrx();
-					covNonSparse = nonSparseLDA.getNonSparsePrecisionMatrx();
+					for (int sampling = 100; sampling <= 200; sampling += 100) {
+						SampleWishartGraph negWishart = new SampleWishartGraph(negSmall, sampling);
+						SampleWishartGraph posWishart = new SampleWishartGraph(posSmall, sampling);
+						for (int selected = 500; selected <= 2000; selected+=500) {
+					//		new GraphEva(negTruth.adaptiveThresholding(thrr / Math.sqrt(20000)),
+					//				negWishart.adaptiveThresholding(thr, selected))
+					//						.print("wishart-" + sampling + "-" + selected + "-neg\t" + t, ps);
+							new GraphEva(posTruth.adaptiveThresholding(thrr / Math.sqrt(20000)),
+									posWishart.adaptiveThresholding(thr, selected))
+											.print("wishart-" + sampling + "-" + selected + "-pos\t" + t, ps);
+							for (int overlap = 10; overlap <= 30; overlap += 10) {
+								int[][] diffWishart = posWishart.adaptiveThresholdingDiff(thr, overlap, negWishart);
+								new GraphEva(diffTruth, diffWishart)
+										.print("wishart-" + sampling + "-" + overlap + "-diff\t" + t, ps);
+							}
+						}
 
-			//		plotAccuracy("sparse-" + Estimator.lambda , covDaehr, covLarge);
-			//		saveMatrxInFile(path+"sparse-"+ Estimator.lambda+"-"+t,new Matrix(covDaehr).inverse(),base._codes,map.nameMap);
-
-					plotAccuracy("glasso-" + Estimator.lambda, covGlasso, covLarge);
-			//		saveMatrxInFile(path+"glasso-" + Estimator.lambda+"_"+t,(covGlasso),base._codes,map.nameMap);
-
-					plotAccuracy("nonsparse-" + Estimator.lambda , covNonSparse, covLarge);
-			//		saveMatrxInFile(path+"nonsparse-" + Estimator.lambda+"-"+t,(covNonSparse),base._codes,map.nameMap);
-
-					
-					
-					Estimator.lambda *= 0.1;
+					}
 				}
-
-				mDaehrLDA.slambda = 0.75;
-				for (int i = 0; i < 4; i++) {
-					sparseLDA = new mDaehrLDA(s1.getTrainingSet(), s1.getTrainingLabels(), false);
-					covDaehr = sparseLDA.getShrinkagedCovPrecisionMatrx();
-					plotAccuracy("shrinkage-"+mDaehrLDA.slambda, covDaehr, covLarge);
-					saveMatrxInFile(path+"shrinkage-"+mDaehrLDA.slambda+"-"+t,covDaehr,base._codes,map.nameMap);
-
-					mDaehrLDA.slambda -=0.25;
-				}
-
 			}
-
 		}
 		// }
 	}
+	// }
 
 	// }
-	
-	private static void saveMatrxInFile(String path, double[][] matrx, List<String> codes, Map<String, String> map){
+
+	private static void saveMatrxInFile(String path, double[][] matrx, List<String> codes, Map<String, String> map) {
 		try {
-			PrintStream ps=new PrintStream(path+".txt");
-			for(int i=0;i<matrx.length;i++){
-				for(int j=0;j<matrx[i].length;j++){
-					ps.println(map.get(codes.get(i))+"\t"+map.get(codes.get(j))+"\t"+matrx[i][j]);
+			PrintStream ps = new PrintStream(path + ".txt");
+			for (int i = 0; i < matrx.length; i++) {
+				for (int j = 0; j < matrx[i].length; j++) {
+					ps.println(map.get(codes.get(i)) + "\t" + map.get(codes.get(j)) + "\t" + matrx[i][j]);
 				}
 			}
 			ps.close();
@@ -175,7 +192,7 @@ public class MatrixCompare {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		}
+	}
 
 	private static void accuracy(String name, double[][] data, int[] labels, Classifier<double[]> classifier, long t1,
 			long t2) {
