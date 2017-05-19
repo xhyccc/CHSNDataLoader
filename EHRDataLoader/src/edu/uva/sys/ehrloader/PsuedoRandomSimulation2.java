@@ -9,7 +9,9 @@ import java.util.Set;
 import edu.uva.libopt.numeric.*;
 import edu.uva.sys.ehrloader.ml.BalanceTTSelection;
 import edu.uva.sys.ehrloader.recovery.*;
+import smile.math.matrix.Matrix;
 import smile.projection.PCA;
+import smile.stat.distribution.GLassoMultivariateGaussianDistribution;
 import xiong.hdstats.Estimator;
 import xiong.hdstats.da.AdaBoostTreeClassifier;
 import xiong.hdstats.da.AdaboostLRClassifier;
@@ -36,136 +38,152 @@ import xiong.hdstats.da.ShLDA;
 import xiong.hdstats.da.ShrinkageLDA;
 import xiong.hdstats.da.mDaehrLDA;
 
-public class LIBSVMBenchmarkCompareDesparse {
+public class PsuedoRandomSimulation2 {
 
 	public static PrintStream ps = null;
+	public static PrintStream ps2 = null;
+	
 	public static int t_size = 400;
 	public static int te_size = 100;
 	public static int days = 30;
 
-	public static String path = "/Users/xiongha/Dropbox/technical-reports/report-1/libsvm-data/";
-	public static String[] datasets = { "web1", "web2", "web3"};
-	public static String[][] datafiles = { { "w1a.txt", "w1b.txt" }, { "w2a.txt", "w2b.txt" }, { "w3a.txt", "w3b.txt" }};
+
+
 
 	public static void main(String[] args) {
-		for (int i = 0; i < datasets.length; i++)
-			_main(datasets[i], datafiles[i]);
-	}
 
-	public static void _main(String dataset, String[] datafile) {
-		LIBSVMDataLoader sloader = new LIBSVMDataLoader();
-		sloader.load(path, datafile);
-		double[][] fm = sloader.getDataMatrix();
-		int[] labels = sloader.getLabel();
+		double[][] cov = new double[200][200];
 
-		System.out.println("matrix " + fm.length + " x " + fm[0].length);
-		// ps.println("using NMF 10");
-		// double[][] recoveredData = dataRecovery(new NMFRecovery(10), fm, fm,
-		// missingcodes, 0);
+		for (int i = 0; i < cov.length; i++) {
+			for (int j = 0; j < cov.length; j++) {
+				cov[i][j] = Math.pow(0.8, Math.abs(i - j));
+			}
+		}
+		double[] mean = new double[200];
+		double[] meanPositive = new double[200];
+		double[] meanNegative = new double[200];
+		double[][] groupMean =new double[2][200];
+		double[] mud = new double[200];
+		for (int i = 0; i < meanPositive.length; i++) {
+			if (i < 10) {
+				meanPositive[i] = 1;
+				mud[i] = 1;
+				mean[i] = 0.5;
+				groupMean[0][i]=1.0;
+			} else {
+				meanPositive[i] = 0;
+				mud[i] = 0;
+				mean[i] = 0;
+				groupMean[0][i]=0;
+			}
+			meanNegative[i] = 0.0;
+			groupMean[1][i]=0.0;
+		}
 
-		for (int t = 25; t <= 60; t += 15) {
-			t_size = t;
-			te_size = 200;
+		double[][] theta_s = new Matrix(cov).inverse();
+		GLassoMultivariateGaussianDistribution posD = new GLassoMultivariateGaussianDistribution(meanPositive, cov);
+
+		GLassoMultivariateGaussianDistribution negD = new GLassoMultivariateGaussianDistribution(meanNegative, cov);
+		double[] beta_s = new double[200];
+		new Matrix(theta_s).ax(mud, beta_s);
+		double[][] testData = new double[500][200];
+		int[] testLabel = new int[500];
+		for (int i = 0; i < 500; i++) {
+			double[] tdat;
+			if (i % 2 == 0) {
+				tdat = posD.rand();
+				testLabel[i] = 1;
+			} else {
+				tdat = negD.rand();
+				testLabel[i] = 0;
+			}
+			for (int j = 0; j < cov.length; j++)
+				testData[i][j] = tdat[j];
+		}
+
+		for (int t = 160; t <= 160; t+=40) {
 			try {
-				ps = new PrintStream("/Users/xiongha/Box Sync/CHSN_pattern mining/Jinghe/results-" + dataset
-						+ "-" + t_size + ".txt");
+				ps = new PrintStream("/Users/xiongha/Box Sync/CHSN_pattern mining/Jinghe/lsimulation-" + t + ".txt");
+				ps2 = new PrintStream("/Users/xiongha/Box Sync/CHSN_pattern mining/Jinghe/lsimulation-asym-" + t + ".txt");
 			} catch (FileNotFoundException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+			for (int r = 0; r <=100; r++) {
+				double[][] trainData = new double[t][cov.length];
+				int[] trainLabel = new int[t];
+				double[] smeanP = new double[cov.length];
+				double[] smeanN = new double[cov.length];
 
-			for (int r = 0; r < 100; r++) {
-				// Estimator.lambda = 0.005 * 0.25;
+				for (int i = 0; i < t; i++) {
+					double[] tdat;
+					{
+						if (i % 2 == 0) {
+							tdat = posD.rand();
+							trainLabel[i] = 1;
+						} else {
+							tdat = negD.rand();
+							trainLabel[i] = 0;
+						}
+						for (int j = 0; j < cov.length; j++) {
+							trainData[i][j] = tdat[j];
+							if (i % 2 == 0) {
+								smeanP[j] = 0.5 / t * tdat[j];
+							} else {
+								smeanN[j] = 0.5 / t * tdat[j];
+							}
+						}
+					}
 
-				BalanceTTSelection s = new BalanceTTSelection(fm, labels, t_size, te_size);
-				s.select();
-
-				long t1 = System.currentTimeMillis();
-				OLDA LDA = new OLDA(s.getTrainingSet(), s.getTrainingLabels(), false);
-				long t2 = System.currentTimeMillis();
-				accuracy("LDA", s.getTestingSet(), s.getTestingLabels(), LDA, t1, t2);
-
-				for (double lambda = 0.5; lambda <= 3; lambda += 0.5) {
+				}
+				double[] smud = new double[cov.length];
+				for (int i = 0; i < smud.length; i++) {
+					smud[i] = smeanP[i] - smeanN[i];
+				}
+				for (double lambda = 1; lambda <= 70; lambda++) {
 					Estimator.lambda = lambda;
-					t1 = System.currentTimeMillis();
-					GLassoLDA oLDA = new GLassoLDA(s.getTrainingSet(), s.getTrainingLabels(), false);
-					t2 = System.currentTimeMillis();
-					accuracy("SDA-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), oLDA, t1, t2);
+					GLassoLDA oLDA = new GLassoLDA(trainData, trainLabel, false);
+					accuracy("SDA-" + Estimator.lambda, testData, testLabel, oLDA, 0, 0);
+					double[] beta_g = new double[cov.length];
+					new Matrix(oLDA.pooledInverseCovariance).atx(smud, beta_g);
+					double[] error = new double[cov.length];
+					for (int i = 0; i < error.length; i++) {
+						error[i] = beta_g[i] - beta_s[i];
+					}
+					ps2.println("SDA-"+Estimator.lambda+"\t"+Utils.getLxNorm(error, Utils.LINF));
 				}
 
-				for (double lambda = 0.5; lambda <= 3; lambda += 0.5) {
+				for (double lambda = 1; lambda <= 70; lambda++) {
 					Estimator.lambda = lambda;
-					t1 = System.currentTimeMillis();
-					NonSparseLDA oLDA = new NonSparseLDA(s.getTrainingSet(), s.getTrainingLabels(), false);
-					t2 = System.currentTimeMillis();
-					accuracy("\\TheName{}-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), oLDA, t1, t2);
+					NonSparseLDA oLDA = new NonSparseLDA(trainData, trainLabel, false);
+					accuracy("\\TheName{}-" + Estimator.lambda, testData, testLabel, oLDA, 0, 0);
+					double[] beta_g = new double[cov.length];
+					new Matrix(oLDA.pooledInverseCovariance).atx(smud, beta_g);
+					double[] error = new double[cov.length];
+					for (int i = 0; i < error.length; i++) {
+						error[i] = beta_g[i] - beta_s[i];
+					}
+					ps2.println("\\TheName{}-"+Estimator.lambda+"\t"+Utils.getLxNorm(error, Utils.LINF));
 				}
 
-				t1 = System.currentTimeMillis();
-				SVMClassifier svm = new SVMClassifier(s.getTrainingSet(), s.getTrainingLabels());
-				t2 = System.currentTimeMillis();
-				accuracy("SVM", s.getTestingSet(), s.getTestingLabels(), svm, t1, t2);
-
-				t1 = System.currentTimeMillis();
-				t1 = System.currentTimeMillis();
-				LRClassifier lr = new LRClassifier(s.getTrainingSet(), s.getTrainingLabels(), 10);
-				t2 = System.currentTimeMillis();
-				accuracy("LR", s.getTestingSet(), s.getTestingLabels(), lr, t1, t2);
-
-				t1 = System.currentTimeMillis();
-				double[][] train = s.getTrainingSet();
-				double[][] test = s.getTestingSet();
-				mDaehrLDA large = new mDaehrLDA(train, s.getTrainingLabels(), false);
-				PCA pca = new PCA(large.getSampleCovarianceMatrix());
-				double[][] t_train = pca.project(train);
-				double[][] t_test = pca.project(test);
-				LDA = new OLDA(t_train, s.getTrainingLabels(), false);
-				t2 = System.currentTimeMillis();
-				accuracy("Ye-LDA", t_test, s.getTestingLabels(), LDA, t1, t2);
-
-				try {
-					t1 = System.currentTimeMillis();
-					DTreeClassifier dtc = new DTreeClassifier(s.getTrainingSet(), s.getTrainingLabels(), 10);
-					t2 = System.currentTimeMillis();
-					accuracy("DTree-10", s.getTestingSet(), s.getTestingLabels(), dtc, t1, t2);
-
-					t1 = System.currentTimeMillis();
-					dtc = new DTreeClassifier(s.getTrainingSet(), s.getTrainingLabels(), 20);
-					t2 = System.currentTimeMillis();
-					accuracy("DTree-20", s.getTestingSet(), s.getTestingLabels(), dtc, t1, t2);
-				} catch (Exception exp) {
-					exp.printStackTrace();
-				}
-
-				t1 = System.currentTimeMillis();
-				RandomForestClassifier rfc = new RandomForestClassifier(s.getTrainingSet(), s.getTrainingLabels(), 50);
-				t2 = System.currentTimeMillis();
-				accuracy("RFC-50", s.getTestingSet(), s.getTestingLabels(), rfc, t1, t2);
-
-				t1 = System.currentTimeMillis();
-				rfc = new RandomForestClassifier(s.getTrainingSet(), s.getTrainingLabels(), 100);
-				t2 = System.currentTimeMillis();
-				accuracy("RFC-100", s.getTestingSet(), s.getTestingLabels(), rfc, t1, t2);
-
-				t1 = System.currentTimeMillis();
-				NonlinearSVMClassifier nsvm = new NonlinearSVMClassifier(s.getTrainingSet(), s.getTrainingLabels(), 0.1,
-						1);
-				t2 = System.currentTimeMillis();
-				accuracy("NLSVM-0.1", s.getTestingSet(), s.getTestingLabels(), nsvm, t1, t2);
-
-				t1 = System.currentTimeMillis();
-				nsvm = new NonlinearSVMClassifier(s.getTrainingSet(), s.getTrainingLabels(), 1, 1);
-				t2 = System.currentTimeMillis();
-				accuracy("NLSVM-1.0", s.getTestingSet(), s.getTestingLabels(), nsvm, t1, t2);
-
-				t1 = System.currentTimeMillis();
-				nsvm = new NonlinearSVMClassifier(s.getTrainingSet(), s.getTrainingLabels(), 10, 1);
-				t2 = System.currentTimeMillis();
-				accuracy("NLSVM-10", s.getTestingSet(), s.getTestingLabels(), nsvm, t1, t2);
-
+//				OLDA LDA = new OLDA(trainData, trainLabel, false);
+//				accuracy("LDA", testData, testLabel, LDA, 0, 0);
+//				double[] beta_g = new double[cov.length];
+//				new Matrix(LDA.pooledInverseCovariance).atx(smud, beta_g);
+//				double[] errorr = new double[cov.length];
+//				for (int i = 0; i < errorr.length; i++) {
+//					errorr[i] = beta_g[i] - beta_s[i];
+//				}
+//				ps2.println("LDA\t"+Utils.getLxNorm(errorr, Utils.LINF));
+//
+//				LDA = new OLDA(trainData, trainLabel, false);
+//				LDA.globalMean=mean;
+//				LDA.groupMean=groupMean;
+//				LDA.pooledInverseCovariance=theta_s;
+//				accuracy("Optimal", testData, testLabel, LDA, 0, 0);
 			}
-
 		}
+
 	}
 
 	private static void accuracy(String name, double[][] data, int[] labels, Classifier<double[]> classifier, long t1,

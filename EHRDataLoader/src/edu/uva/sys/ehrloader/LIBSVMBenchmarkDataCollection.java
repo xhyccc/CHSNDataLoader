@@ -16,6 +16,7 @@ import xiong.hdstats.da.AdaboostLRClassifier;
 import xiong.hdstats.da.BayesLDA;
 import xiong.hdstats.da.Classifier;
 import xiong.hdstats.da.DTreeClassifier;
+import xiong.hdstats.da.DaehrLDA;
 import xiong.hdstats.da.GLassoLDA;
 import xiong.hdstats.da.LDA;
 import xiong.hdstats.da.LRClassifier;
@@ -36,7 +37,7 @@ import xiong.hdstats.da.ShLDA;
 import xiong.hdstats.da.ShrinkageLDA;
 import xiong.hdstats.da.mDaehrLDA;
 
-public class LIBSVMBenchmarkCompareDesparse {
+public class LIBSVMBenchmarkDataCollection {
 
 	public static PrintStream ps = null;
 	public static int t_size = 400;
@@ -44,8 +45,18 @@ public class LIBSVMBenchmarkCompareDesparse {
 	public static int days = 30;
 
 	public static String path = "/Users/xiongha/Dropbox/technical-reports/report-1/libsvm-data/";
-	public static String[] datasets = { "web1", "web2", "web3"};
-	public static String[][] datafiles = { { "w1a.txt", "w1b.txt" }, { "w2a.txt", "w2b.txt" }, { "w3a.txt", "w3b.txt" }};
+	public static String[] datasets = { "adult1", "adult2", "adult3", "web1", "web2", "web3", "phishing", "mushrooms",
+			"madelon", "splice" };
+	public static String[][] datafiles = { { "a1a.txt", "a1b.txt" }, { "a2a.txt", "a2b.txt" }, { "a3a.txt", "a3b.txt" },
+			{ "w1a.txt", "w1b.txt" }, { "w2a.txt", "w2b.txt" }, { "w3a.txt", "w3b.txt" }, { "phishing.txt" },
+			{ "mushrooms.txt" }, { "madelon.txt", "madelon2.txt" }, { "splice.txt", "splice2.txt" } };
+
+	// public static String[] datasets={"web2","web3","phishing",
+	// "mushrooms","madelon","splice"};
+	// public static String[][]
+	// datafiles={{"w2a.txt","w2b.txt"},{"w3a.txt","w3b.txt"},
+	// {"phishing.txt"},{"mushrooms.txt"},{"madelon.txt","madelon2.txt"},
+	// {"splice.txt","splice2.txt"}};
 
 	public static void main(String[] args) {
 		for (int i = 0; i < datasets.length; i++)
@@ -57,115 +68,28 @@ public class LIBSVMBenchmarkCompareDesparse {
 		sloader.load(path, datafile);
 		double[][] fm = sloader.getDataMatrix();
 		int[] labels = sloader.getLabel();
+		try {
+			System.out.println("matrix " + fm.length + " x " + fm[0].length);
 
-		System.out.println("matrix " + fm.length + " x " + fm[0].length);
-		// ps.println("using NMF 10");
-		// double[][] recoveredData = dataRecovery(new NMFRecovery(10), fm, fm,
-		// missingcodes, 0);
-
-		for (int t = 25; t <= 60; t += 15) {
-			t_size = t;
-			te_size = 200;
-			try {
-				ps = new PrintStream("/Users/xiongha/Box Sync/CHSN_pattern mining/Jinghe/results-" + dataset
-						+ "-" + t_size + ".txt");
-			} catch (FileNotFoundException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+			ps = new PrintStream("/Users/xiongha/Box Sync/CHSN_pattern mining/Jinghe/raw-" + dataset + ".txt");
+			int index=0;
+			for (double d: fm[0]) {
+					ps.print("v_"+(++index)+"\t");
 			}
-
-			for (int r = 0; r < 100; r++) {
-				// Estimator.lambda = 0.005 * 0.25;
-
-				BalanceTTSelection s = new BalanceTTSelection(fm, labels, t_size, te_size);
-				s.select();
-
-				long t1 = System.currentTimeMillis();
-				OLDA LDA = new OLDA(s.getTrainingSet(), s.getTrainingLabels(), false);
-				long t2 = System.currentTimeMillis();
-				accuracy("LDA", s.getTestingSet(), s.getTestingLabels(), LDA, t1, t2);
-
-				for (double lambda = 0.5; lambda <= 3; lambda += 0.5) {
-					Estimator.lambda = lambda;
-					t1 = System.currentTimeMillis();
-					GLassoLDA oLDA = new GLassoLDA(s.getTrainingSet(), s.getTrainingLabels(), false);
-					t2 = System.currentTimeMillis();
-					accuracy("SDA-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), oLDA, t1, t2);
+			ps.println("label");
+			index = 0;
+			for (double[] data : fm) {
+				for (double d : data) {
+					ps.print(d+"\t");
 				}
-
-				for (double lambda = 0.5; lambda <= 3; lambda += 0.5) {
-					Estimator.lambda = lambda;
-					t1 = System.currentTimeMillis();
-					NonSparseLDA oLDA = new NonSparseLDA(s.getTrainingSet(), s.getTrainingLabels(), false);
-					t2 = System.currentTimeMillis();
-					accuracy("\\TheName{}-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), oLDA, t1, t2);
-				}
-
-				t1 = System.currentTimeMillis();
-				SVMClassifier svm = new SVMClassifier(s.getTrainingSet(), s.getTrainingLabels());
-				t2 = System.currentTimeMillis();
-				accuracy("SVM", s.getTestingSet(), s.getTestingLabels(), svm, t1, t2);
-
-				t1 = System.currentTimeMillis();
-				t1 = System.currentTimeMillis();
-				LRClassifier lr = new LRClassifier(s.getTrainingSet(), s.getTrainingLabels(), 10);
-				t2 = System.currentTimeMillis();
-				accuracy("LR", s.getTestingSet(), s.getTestingLabels(), lr, t1, t2);
-
-				t1 = System.currentTimeMillis();
-				double[][] train = s.getTrainingSet();
-				double[][] test = s.getTestingSet();
-				mDaehrLDA large = new mDaehrLDA(train, s.getTrainingLabels(), false);
-				PCA pca = new PCA(large.getSampleCovarianceMatrix());
-				double[][] t_train = pca.project(train);
-				double[][] t_test = pca.project(test);
-				LDA = new OLDA(t_train, s.getTrainingLabels(), false);
-				t2 = System.currentTimeMillis();
-				accuracy("Ye-LDA", t_test, s.getTestingLabels(), LDA, t1, t2);
-
-				try {
-					t1 = System.currentTimeMillis();
-					DTreeClassifier dtc = new DTreeClassifier(s.getTrainingSet(), s.getTrainingLabels(), 10);
-					t2 = System.currentTimeMillis();
-					accuracy("DTree-10", s.getTestingSet(), s.getTestingLabels(), dtc, t1, t2);
-
-					t1 = System.currentTimeMillis();
-					dtc = new DTreeClassifier(s.getTrainingSet(), s.getTrainingLabels(), 20);
-					t2 = System.currentTimeMillis();
-					accuracy("DTree-20", s.getTestingSet(), s.getTestingLabels(), dtc, t1, t2);
-				} catch (Exception exp) {
-					exp.printStackTrace();
-				}
-
-				t1 = System.currentTimeMillis();
-				RandomForestClassifier rfc = new RandomForestClassifier(s.getTrainingSet(), s.getTrainingLabels(), 50);
-				t2 = System.currentTimeMillis();
-				accuracy("RFC-50", s.getTestingSet(), s.getTestingLabels(), rfc, t1, t2);
-
-				t1 = System.currentTimeMillis();
-				rfc = new RandomForestClassifier(s.getTrainingSet(), s.getTrainingLabels(), 100);
-				t2 = System.currentTimeMillis();
-				accuracy("RFC-100", s.getTestingSet(), s.getTestingLabels(), rfc, t1, t2);
-
-				t1 = System.currentTimeMillis();
-				NonlinearSVMClassifier nsvm = new NonlinearSVMClassifier(s.getTrainingSet(), s.getTrainingLabels(), 0.1,
-						1);
-				t2 = System.currentTimeMillis();
-				accuracy("NLSVM-0.1", s.getTestingSet(), s.getTestingLabels(), nsvm, t1, t2);
-
-				t1 = System.currentTimeMillis();
-				nsvm = new NonlinearSVMClassifier(s.getTrainingSet(), s.getTrainingLabels(), 1, 1);
-				t2 = System.currentTimeMillis();
-				accuracy("NLSVM-1.0", s.getTestingSet(), s.getTestingLabels(), nsvm, t1, t2);
-
-				t1 = System.currentTimeMillis();
-				nsvm = new NonlinearSVMClassifier(s.getTrainingSet(), s.getTrainingLabels(), 10, 1);
-				t2 = System.currentTimeMillis();
-				accuracy("NLSVM-10", s.getTestingSet(), s.getTestingLabels(), nsvm, t1, t2);
-
+				ps.println(labels[index++]);
 			}
-
+			ps.close();
+		} catch (FileNotFoundException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
 		}
+
 	}
 
 	private static void accuracy(String name, double[][] data, int[] labels, Classifier<double[]> classifier, long t1,

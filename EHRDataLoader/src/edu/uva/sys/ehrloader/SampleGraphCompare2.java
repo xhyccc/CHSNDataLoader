@@ -58,10 +58,10 @@ public class SampleGraphCompare2 {
 		EHRRecordMap map = new EHRRecordMap("/Users/xiongha/Box Sync/CHSN_pattern mining/Jinghe/mapping.txt");
 
 		EHRecordBase base = ICDLineReader.load(map, "/Users/xiongha/Box Sync/CHSN_pattern mining/Jinghe/non-mh_icd.csv",
-				"x_icdcode", 300000);
+				"x_icdcode", 500000);
 
 		EHRecordBase base_2 = ICDLineReader.load(map, "/Users/xiongha/Box Sync/CHSN_pattern mining/Jinghe/icd_MD.csv",
-				"y_icdcode", 300000);
+				"y_icdcode", 500000);
 
 		// base_2.removeVisitsAfter(MHCode.codes);
 
@@ -91,7 +91,7 @@ public class SampleGraphCompare2 {
 		String path = "/Users/xiongha/Box Sync/CHSN_pattern mining/Jinghe/";
 
 		// for (int r = 0; r < 50; r++) {
-		BalanceTTSelection s1 = new BalanceTTSelection(fm, base.getLabels(), 20000, 1);
+		BalanceTTSelection s1 = new BalanceTTSelection(fm, base.getLabels(), 5000, 1);
 		s1.select();
 		// RandomSampleSelection rss = new
 		// RandomSampleSelection(s1.getTrainingSet(), s1.getTrainingLabels(), 0,
@@ -105,69 +105,102 @@ public class SampleGraphCompare2 {
 		double[][] posLarge = s1.postiveSamples;
 		System.out.println("Positive Samples OUT");
 
-		DGLassoGraph negTruth = new DGLassoGraph(negLarge, 0.1);
-		DGLassoGraph posTruth = new DGLassoGraph(posLarge, 0.1);
-		for (double thrr = 4.72; thrr <= 4.72; thrr += 0.001) {
-			int[][] diffTruth = posTruth.adaptiveThresholdingDiff(thrr / Math.sqrt(20000), negTruth);
+		// DGLassoGraph negTruth = new DGLassoGraph(negLarge, 0.1);
+		SampleGraph posTruth = new SampleGraph(posLarge);
+		// double[] thrs={4.62,4.72,4.91};
+		// double[] thrs={0,};
+		// double[] thrs={4.62,};
+		double[] thrs = { 4.72, };
+		// double[] thrs = { 4.91 };
+		for (double thrr : thrs) {
+			// int[][] diffTruth = posTruth.adaptiveThresholdingDiff(thrr /
+			// Math.sqrt(5000), negTruth);
 			try {
 				ps = new PrintStream(
-						"/Users/xiongha/Box Sync/CHSN_pattern mining/Jinghe/sgraph-threshold-" + thrr + "-2.txt");
+						"/Users/xiongha/Box Sync/CHSN_pattern mining/Jinghe/graph-ehr-threshold-" + thrr + ".txt");
 			} catch (FileNotFoundException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			for (int t = 250; t < 1000; t += 250) {
-				for (int r = 0; r < 10; r++) {
-					RandomSampleSelection neg = new RandomSampleSelection(negLarge, t);
+			int[] ts = { 250, 300 };
+			for (int t : ts) {
+				for (int r = 0; r < 5; r++) {
+				//	RandomSampleSelection neg = new RandomSampleSelection(negLarge, t);
 					RandomSampleSelection pos = new RandomSampleSelection(posLarge, t);
-					double[][] negSmall = neg.getDataSet();
+				//	double[][] negSmall = neg.getDataSet();
 					double[][] posSmall = pos.getDataSet();
 					double thr = thrr / Math.sqrt(t);
-					SampleGraph negSample = new SampleGraph(negSmall);
-				//	new GraphEva(negTruth.adaptiveThresholding(thrr / Math.sqrt(20000)),
-				//			negSample.adaptiveThresholding(thr)).print("sample-neg\t" + t, ps);
+					// SampleGraph negSample = new SampleGraph(negSmall);
+					// new GraphEva(negTruth.adaptiveThresholding(thrr /
+					// Math.sqrt(20000)),
+					// negSample.adaptiveThresholding(thr)).print("sample-neg\t"
+					// + t, ps);
 					SampleGraph posSample = new SampleGraph(posSmall);
-					new GraphEva(posTruth.adaptiveThresholding(thrr / Math.sqrt(20000)),
+					new GraphEva(posTruth.adaptiveThresholding(thrr / Math.sqrt(5000)),
 							posSample.adaptiveThresholding(thr)).print("sample-pos\t" + t, ps);
-					int[][] diffSample = posSample.adaptiveThresholdingDiff(thr, negSample);
-					new GraphEva(diffTruth, diffSample).print("sample-diff\t" + t, ps);
+					// int[][] diffSample =
+					// posSample.adaptiveThresholdingDiff(thr, negSample);
+					// new GraphEva(diffTruth, diffSample).print("sample-diff\t"
+					// + t, ps);
 
-					for (double lbd = 0.01; lbd <= 10; lbd *= 10) {
-						GLassoGraph negGlasso = new GLassoGraph(negSmall, lbd);
-				//		new GraphEva(negTruth.adaptiveThresholding(thrr / Math.sqrt(20000)),
-				//				negGlasso.adaptiveThresholding(thr)).print("glasso" + lbd + "-neg\t" + t, ps);
+					for (double lbd = 0.1; lbd <= 10; lbd *= 10) {
+						// GLassoGraph negGlasso = new GLassoGraph(negSmall,
+						// lbd);
+						// new GraphEva(negTruth.adaptiveThresholding(thrr /
+						// Math.sqrt(20000)),
+						// negGlasso.adaptiveThresholding(thr)).print("glasso" +
+						// lbd + "-neg\t" + t, ps);
 						GLassoGraph posGlasso = new GLassoGraph(posSmall, lbd);
-						new GraphEva(posTruth.adaptiveThresholding(thrr / Math.sqrt(20000)),
+						new GraphEva(posTruth.adaptiveThresholding(thrr / Math.sqrt(5000)),
 								posGlasso.adaptiveThresholding(thr)).print("glasso" + lbd + "-0.1-pos\t" + t, ps);
-						int[][] diffGlasso = posGlasso.adaptiveThresholdingDiff(thr, negGlasso);
-						new GraphEva(diffTruth, diffGlasso).print("glasso-" + lbd + "-diff\t" + t, ps);
+						// int[][] diffGlasso =
+						// posGlasso.adaptiveThresholdingDiff(thr, negGlasso);
+						// new GraphEva(diffTruth, diffGlasso).print("glasso-" +
+						// lbd + "-diff\t" + t, ps);
 
-						DGLassoGraph negDGLasso = new DGLassoGraph(negSmall, lbd);
-				//		new GraphEva(negTruth.adaptiveThresholding(thrr / Math.sqrt(20000)),
-				//				negDGLasso.adaptiveThresholding(thr)).print("dglasso-" + lbd + "-neg\t" + t, ps);
+						// DGLassoGraph negDGLasso = new DGLassoGraph(negSmall,
+						// lbd);
+						// new GraphEva(negTruth.adaptiveThresholding(thrr /
+						// Math.sqrt(20000)),
+						// negDGLasso.adaptiveThresholding(thr)).print("dglasso-"
+						// + lbd + "-neg\t" + t, ps);
 						DGLassoGraph posDGLasso = new DGLassoGraph(posSmall, lbd);
-						new GraphEva(posTruth.adaptiveThresholding(thrr / Math.sqrt(20000)),
+						new GraphEva(posTruth.adaptiveThresholding(thrr / Math.sqrt(5000)),
 								posDGLasso.adaptiveThresholding(thr)).print("dglasso-" + lbd + "-pos\t" + t, ps);
-						int[][] diffDGLasso = posDGLasso.adaptiveThresholdingDiff(thr, negDGLasso);
-						new GraphEva(diffTruth, diffDGLasso).print("dglasso-" + lbd + "-diff\t" + t, ps);
+						// int[][] diffDGLasso =
+						// posDGLasso.adaptiveThresholdingDiff(thr, negDGLasso);
+						// new GraphEva(diffTruth, diffDGLasso).print("dglasso-"
+						// + lbd + "-diff\t" + t, ps);
 					}
 
 					for (int sampling = 100; sampling <= 200; sampling += 100) {
-						SampleWishartGraph negWishart = new SampleWishartGraph(negSmall, sampling);
-						SampleWishartGraph posWishart = new SampleWishartGraph(posSmall, sampling);
-						for (int selected = 500; selected <= 2000; selected+=500) {
-					//		new GraphEva(negTruth.adaptiveThresholding(thrr / Math.sqrt(20000)),
-					//				negWishart.adaptiveThresholding(thr, selected))
-					//						.print("wishart-" + sampling + "-" + selected + "-neg\t" + t, ps);
-							new GraphEva(posTruth.adaptiveThresholding(thrr / Math.sqrt(20000)),
-									posWishart.adaptiveThresholding(thr, selected))
-											.print("wishart-" + sampling + "-" + selected + "-pos\t" + t, ps);
-							for (int overlap = 10; overlap <= 30; overlap += 10) {
-								int[][] diffWishart = posWishart.adaptiveThresholdingDiff(thr, overlap, negWishart);
-								new GraphEva(diffTruth, diffWishart)
-										.print("wishart-" + sampling + "-" + overlap + "-diff\t" + t, ps);
+						// DGLassoWishartGraph negWishart = new
+						// DGLassoWishartGraph(negSmall, lbd, sampling);
+						for (double lbd = 1; lbd <= 100; lbd *= 10) {
+							SampleWishartGraph posWishart = new SampleWishartGraph(posSmall, sampling);
+							for (int selected = 1000; selected <= 5000; selected += 1000) {
+								// new
+								// GraphEva(negTruth.adaptiveThresholding(thrr /
+								// Math.sqrt(20000)),
+								// negWishart.adaptiveThresholding(thr,
+								// selected))
+								// .print("wishart-" + sampling + "-" + selected
+								// + "-neg\t" + t, ps);
+								new GraphEva(posTruth.adaptiveThresholding(thrr / Math.sqrt(5000)),
+										posWishart.adaptiveThresholding(thr, selected,0))
+												.print("wishart-" + sampling + "-" + selected + "-pos\t" + t, ps);
+
 							}
 						}
+						// for (int overlap = 10; overlap <= 30; overlap += 10)
+						// {
+						// int[][] diffWishart =
+						// posWishart.adaptiveThresholdingDiff(thr, overlap,
+						// negWishart);
+						// new GraphEva(diffTruth, diffWishart)
+						// .print("wishart-" + sampling + "-" + overlap +
+						// "-diff\t" + t, ps);
+						// }
 
 					}
 				}

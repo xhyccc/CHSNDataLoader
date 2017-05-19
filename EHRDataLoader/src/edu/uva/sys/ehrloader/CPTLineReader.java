@@ -22,7 +22,7 @@ public class CPTLineReader {
 					String[] lns = ln.split(",");
 					if (isNumeric(lns[3]))
 						_base.insertRecord(lns[0], lns[2], lns[3], Integer.parseInt(lns[4]), 
-								lns[5].toLowerCase().equals("M") ? 1 : 0,Integer.parseInt(lns[0]));
+								lns[5].toLowerCase().equals("m") ? 1 : 0,Integer.parseInt(lns[0]));
 				}
 				System.out.println("read lines " + (lindex++));
 				ln = br.readLine();

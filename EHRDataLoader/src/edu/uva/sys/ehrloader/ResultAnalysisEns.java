@@ -35,7 +35,7 @@ public class ResultAnalysisEns {
 			HashMap<Integer,HashMap<String, Double>> accs_std=new HashMap<Integer,HashMap<String, Double>>();
 			HashMap<Integer,HashMap<String, Double>> f1s_std=new HashMap<Integer,HashMap<String, Double>>();
 
-			for (int t = 50; t <= 250; t += 50) {
+			for (int t = 15; t <= 150; t += 15) {
 				System.out.println(
 						//"\\begin{table}\n\\caption{Performance Comparison with " + 
 					"Training Set:"+	t+ "* 2, Testing Set: " + te_size + "*2"
@@ -57,8 +57,8 @@ public class ResultAnalysisEns {
 						f1s.put(t_size, f1);
 
 						BufferedReader br = new BufferedReader(
-								new FileReader("/Users/xiongha/Box Sync/CHSN_pattern mining/Jinghe/bayes-EHR/accuracy-ensemble-"
-										+ t_size + "-" + te_size + "-" + days + ".txt"));
+								new FileReader("/Users/xiongha/Box Sync/CHSN_pattern mining/Jinghe/results-web1-"
+										+ t_size + ".txt"));
 						String ln = br.readLine();
 						while (ln != null) {
 							String[] lns = ln.split("\t");
@@ -95,8 +95,8 @@ public class ResultAnalysisEns {
 
 						
 						br = new BufferedReader(
-								new FileReader("/Users/xiongha/Box Sync/CHSN_pattern mining/Jinghe/bayes-EHR/accuracy-ensemble-"
-										+ t_size + "-" + te_size + "-" + days + ".txt"));
+								new FileReader("/Users/xiongha/Box Sync/CHSN_pattern mining/Jinghe/results-web1-"
+										+ t_size + ".txt"));
 						ln = br.readLine();
 						while (ln != null) {
 							String[] lns = ln.split("\t");
@@ -140,7 +140,7 @@ public class ResultAnalysisEns {
 						}
 
 				//		System.out.println("\\hline\\multicolumn{5}{c}{  Days in Advance: " + days + "}\\\\\\hline");
-						List<String> namess=new ArrayList<String>(accs.get(50).keySet());
+						List<String> namess=new ArrayList<String>(accs.get(15).keySet());
 						Collections.sort(namess);
 						for (String n : namess) {
 							System.out.println(n+"\t" + fix3D(acc.get(n)) 

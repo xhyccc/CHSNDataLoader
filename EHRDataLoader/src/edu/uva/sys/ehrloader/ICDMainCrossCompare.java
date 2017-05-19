@@ -89,13 +89,13 @@ public class ICDMainCrossCompare {
 		// double[][] recoveredData = dataRecovery(new NMFRecovery(10), fm, fm,
 		// missingcodes, 0);
 
-		for (int t = 50; t <= 500; t += 100) {
+		for (int t = 100; t <= 500; t += 100) {
 			for (int te = 200; te <= 200; te += 200) {
 				for (int days = 90; days <= 90; days += 30) {
 					t_size = t;
 					te_size = te;
 					try {
-						ps = new PrintStream("/Users/xiongha/Box Sync/CHSN_pattern mining/Jinghe/accuracy-ensemble-"
+						ps = new PrintStream("/Users/xiongha/Box Sync/CHSN_pattern mining/Jinghe/accuracy-ehr-"
 								+ t_size + "-" + te_size + "-" + days + ".txt");
 					} catch (FileNotFoundException e) {
 						// TODO Auto-generated catch block
@@ -138,88 +138,25 @@ public class ICDMainCrossCompare {
 						// t2);
 						// }
 
-						for (double lambda = 100; lambda >= 1; lambda *= 0.1) {
+						for (double lambda = 1; lambda <= 3; lambda += 0.5) {
 							Estimator.lambda = lambda;
 							t1 = System.currentTimeMillis();
-							RegularizedBayesLDA oLDA = new RegularizedBayesLDA(s.getTrainingSet(),
-									s.getTrainingLabels(), 200, 0);
+							NonSparseLDA oLDA = new NonSparseLDA(s.getTrainingSet(),
+									s.getTrainingLabels(), false);
 							t2 = System.currentTimeMillis();
 							// oLDA.setNumPredictors(5000);
-							oLDA.setNumPredictors(200);
-							accuracy("D_BayesRDA-200-10-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(),
-									oLDA, t1, t2);
-							oLDA.setNumPredictors(150);
-							accuracy("D_BayesRDA-150-10-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(),
-									oLDA, t1, t2);
-							oLDA.setNumPredictors(100);
-							accuracy("D_BayesRDA-100-10-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(),
-									oLDA, t1, t2);
-							oLDA.setNumPredictors(50);
-							accuracy("D_BayesRDA-50-10-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(),
+							accuracy("\\TheName{}" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(),
 									oLDA, t1, t2);
 						}
 
-						for (double lambda = 100; lambda >= 1; lambda *= 0.1) {
-							Estimator.lambda = lambda;
-							t1 = System.currentTimeMillis();
-							MCRegularizedBayesLDA oLDA = new MCRegularizedBayesLDA(s.getTrainingSet(),
-									s.getTrainingLabels(), 200, 0);
-							t2 = System.currentTimeMillis();
-							// oLDA.setNumPredictors(5000);
-							oLDA.setNumPredictors(200);
-							accuracy("MC_BayesRDA-200-10-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(),
-									oLDA, t1, t2);
-							oLDA.setNumPredictors(150);
-							accuracy("MC_BayesRDA-150-10-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(),
-									oLDA, t1, t2);
-							oLDA.setNumPredictors(100);
-							accuracy("MC_BayesRDA-100-10-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(),
-									oLDA, t1, t2);
-							oLDA.setNumPredictors(50);
-							accuracy("MC_BayesRDA-50-10-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(),
-									oLDA, t1, t2);
-						}
-						for (double lambda = 100; lambda >= 1; lambda *= 0.1) {
+						for (double lambda = 1; lambda <= 3; lambda += 0.5) {
 							Estimator.lambda = lambda;
 							t1 = System.currentTimeMillis();
 							GLassoLDA oLDA = new GLassoLDA(s.getTrainingSet(), s.getTrainingLabels(), false);
 							t2 = System.currentTimeMillis();
-							accuracy("CRDA-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), oLDA, t1, t2);
+							accuracy("SDA-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), oLDA, t1, t2);
 						}
 
-						t1 = System.currentTimeMillis();
-						BayesLDA bLDA = new BayesLDA(s.getTrainingSet(), s.getTrainingLabels(), 200, 10);
-						t2 = System.currentTimeMillis();
-						// oLDA.setNumPredictors(5000);
-						bLDA.setNumPredictors(200);
-						accuracy("D_BayesLDA-200-10-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), bLDA,
-								t1, t2);
-						bLDA.setNumPredictors(150);
-						accuracy("D_BayesLDA-150-10-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), bLDA,
-								t1, t2);
-						bLDA.setNumPredictors(100);
-						accuracy("D_BayesLDA-100-10-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), bLDA,
-								t1, t2);
-						bLDA.setNumPredictors(50);
-						accuracy("D_BayesLDA-50-10-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), bLDA,
-								t1, t2);
-
-						t1 = System.currentTimeMillis();
-						MCBayesLDA mcbLDA = new MCBayesLDA(s.getTrainingSet(), s.getTrainingLabels(), 200, 10);
-						t2 = System.currentTimeMillis();
-						// oLDA.setNumPredictors(5000);
-						mcbLDA.setNumPredictors(200);
-						accuracy("MC_BayesLDA-200-10-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(),
-								mcbLDA, t1, t2);
-						mcbLDA.setNumPredictors(150);
-						accuracy("MC_BayesLDA-150-10-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(),
-								mcbLDA, t1, t2);
-						mcbLDA.setNumPredictors(100);
-						accuracy("MC_BayesLDA-100-10-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(),
-								mcbLDA, t1, t2);
-						mcbLDA.setNumPredictors(50);
-						accuracy("MC_BayesLDA-50-10-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(),
-								mcbLDA, t1, t2);
 
 						// t1 = System.currentTimeMillis();
 						// KNNClassifier knn = new
@@ -292,20 +229,12 @@ public class ICDMainCrossCompare {
 						t2 = System.currentTimeMillis();
 						accuracy("NLSVM-10", s.getTestingSet(), s.getTestingLabels(), nsvm, t1, t2);
 
-						t1 = System.currentTimeMillis();
-						LRClassifier lr = new LRClassifier(s.getTrainingSet(), s.getTrainingLabels(), 100);
-						t2 = System.currentTimeMillis();
-						accuracy("RLR-100", s.getTestingSet(), s.getTestingLabels(), lr, t1, t2);
+
 
 						t1 = System.currentTimeMillis();
-						lr = new LRClassifier(s.getTrainingSet(), s.getTrainingLabels(), 10);
+						LRClassifier lr = new LRClassifier(s.getTrainingSet(), s.getTrainingLabels(), 0);
 						t2 = System.currentTimeMillis();
-						accuracy("RLR-10", s.getTestingSet(), s.getTestingLabels(), lr, t1, t2);
-
-						t1 = System.currentTimeMillis();
-						lr = new LRClassifier(s.getTrainingSet(), s.getTrainingLabels(), 1);
-						t2 = System.currentTimeMillis();
-						accuracy("RLR-1", s.getTestingSet(), s.getTestingLabels(), lr, t1, t2);
+						accuracy("LR-1", s.getTestingSet(), s.getTestingLabels(), lr, t1, t2);
 
 						t1 = System.currentTimeMillis();
 						AdaboostLRClassifier ab = new AdaboostLRClassifier(s.getTrainingSet(), s.getTrainingLabels(),

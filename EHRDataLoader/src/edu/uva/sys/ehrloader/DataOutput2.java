@@ -48,7 +48,7 @@ public class DataOutput2 {
 			ps.println("description of each row");
 			ps.println("1 col: patient id");
 			ps.println("2 col: age");
-			// ps.println("3rd col: gender");
+			 ps.println("3rd col: gender");
 			int index = 1;
 			for (String code : codes) {
 				ps.println((2 + index) + " col: " + code);
@@ -75,11 +75,11 @@ public class DataOutput2 {
 		base_2.setLabelsForAllPatients(1);
 
 		base.insertRecords(base_2);
-	//	base.setPositiveLabel(MHCode.codes);
-	//	base.removeVisitsAfter(MHCode.codes, 30);
-	//	base.removePatientLessNVisit(3);
+		base.setPositiveLabel(MHCode.codes);
+		base.removeVisitsAfter(MHCode.codes, 90);
+		base.removePatientLessNVisit(3);
 
-		double[][] fm = base.getBinaryMatrix();
+		double[][] fm = base.getFrequencyMatrix();
 		System.out.println("matrix " + fm.length + " x " + fm[0].length);
 
 		saveFile(base, map, fm, "/Users/xiongha/Box Sync/CHSN_pattern mining/Jinghe/code_matrix");
