@@ -25,7 +25,7 @@ public class PsuedoRandomOnline {
 					final int init_size = (int)(i*p);
 					final int original_density = (int)(o*p*p);
 					try {
-						final PrintStream pps=new PrintStream("/Users/xiongha/Dropbox/sgraph/results-"+init_size+"-"+original_density+"-"+p+".txt");
+						final PrintStream pps=new PrintStream("C:/Users/xiongha/Desktop/sgraph/results-"+init_size+"-"+original_density+"-"+p+".txt");
 						Runnable thread=new Runnable(){
 							public void run(){
 								_main(init_size,p,original_density,pps);
