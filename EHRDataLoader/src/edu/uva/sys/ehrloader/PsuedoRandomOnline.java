@@ -73,7 +73,7 @@ public class PsuedoRandomOnline {
 			alg.init(init);
 			algorithms.put(ed, alg);
 		}
-		OnlineGraphEstimator og = new OnlineGraphEstimator(p * p);
+		OnlineGraphEstimator og = new OnlineGraphEstimator();
 
 		og.init(init);
 
