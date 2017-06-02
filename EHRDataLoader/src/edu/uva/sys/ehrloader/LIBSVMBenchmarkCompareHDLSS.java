@@ -16,13 +16,13 @@ import xiong.hdstats.da.BayesLDA;
 import xiong.hdstats.da.Classifier;
 import xiong.hdstats.da.DTreeClassifier;
 import xiong.hdstats.da.DaehrLDA;
-import xiong.hdstats.da.GLassoLDA;
+import xiong.hdstats.da.SDA;
 import xiong.hdstats.da.LDA;
 import xiong.hdstats.da.LRClassifier;
 import xiong.hdstats.da.LiklihoodBayesLDA;
 import xiong.hdstats.da.MCBayesLDA;
 import xiong.hdstats.da.MCRegularizedBayesLDA;
-import xiong.hdstats.da.NonSparseLDA;
+import xiong.hdstats.da.DBSDA;
 import xiong.hdstats.da.NonlinearSVMClassifier;
 import xiong.hdstats.da.ODaehrLDA;
 import xiong.hdstats.da.OLDA;
@@ -131,7 +131,7 @@ public class LIBSVMBenchmarkCompareHDLSS {
 						for (double lambda = 100; lambda >= 1; lambda *= 0.1) {
 							Estimator.lambda = lambda;
 							t1 = System.currentTimeMillis();
-							GLassoLDA oLDA = new GLassoLDA(s.getTrainingSet(), s.getTrainingLabels(), false);
+							SDA oLDA = new SDA(s.getTrainingSet(), s.getTrainingLabels(), false);
 							t2 = System.currentTimeMillis();
 							accuracy("CRDA-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), oLDA, t1, t2);
 						}

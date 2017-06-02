@@ -18,13 +18,13 @@ import xiong.hdstats.da.AdaboostLRClassifier;
 import xiong.hdstats.da.BayesLDA;
 import xiong.hdstats.da.Classifier;
 import xiong.hdstats.da.DTreeClassifier;
-import xiong.hdstats.da.GLassoLDA;
+import xiong.hdstats.da.SDA;
 import xiong.hdstats.da.LDA;
 import xiong.hdstats.da.LRClassifier;
 import xiong.hdstats.da.LiklihoodBayesLDA;
 import xiong.hdstats.da.MCBayesLDA;
 import xiong.hdstats.da.MCRegularizedBayesLDA;
-import xiong.hdstats.da.NonSparseLDA;
+import xiong.hdstats.da.DBSDA;
 import xiong.hdstats.da.NonlinearSVMClassifier;
 import xiong.hdstats.da.ODaehrLDA;
 import xiong.hdstats.da.OLDA;
@@ -120,13 +120,13 @@ public class PsuedoRandomSimulation {
 				}
 				for (double lambda = 0.5; lambda <= 100; lambda *= 2) {
 					Estimator.lambda = lambda;
-					GLassoLDA oLDA = new GLassoLDA(trainData, trainLabel, false);
+					SDA oLDA = new SDA(trainData, trainLabel, false);
 					accuracy("SDA-" + Estimator.lambda, testData, testLabel, oLDA, 0, 0);
 				}
 
 				for (double lambda = 0.5; lambda <= 100; lambda *= 2) {
 					Estimator.lambda = lambda;
-					NonSparseLDA oLDA = new NonSparseLDA(trainData, trainLabel, false);
+					DBSDA oLDA = new DBSDA(trainData, trainLabel, false);
 					accuracy("\\TheName{}-" + Estimator.lambda, testData, testLabel, oLDA, 0, 0);
 				}
 

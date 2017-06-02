@@ -29,23 +29,27 @@ import xiong.hdstats.da.OLDA;
 import xiong.hdstats.da.OrgLDA;
 import xiong.hdstats.da.PDLassoLDA;
 import xiong.hdstats.da.RandomForestClassifier;
+import xiong.hdstats.da.RayleighFlowLDA;
 import xiong.hdstats.da.RegularizedBayesLDA;
 import xiong.hdstats.da.RegularizedLikelihoodBayesLDA;
 import xiong.hdstats.da.SVMClassifier;
 import xiong.hdstats.da.ShLDA;
 import xiong.hdstats.da.ShrinkageLDA;
+import xiong.hdstats.da.StochasticTruncatedRayleighFlowDBSDA;
+import xiong.hdstats.da.TruncatedRayleighFlowLDA;
 import xiong.hdstats.da.mDaehrLDA;
 
-public class LIBSVMBenchmarkCompareDesparse {
+public class LIBSVMBenchmarkCompareRayleFlow {
 
 	public static PrintStream ps = null;
 	public static int t_size = 400;
 	public static int te_size = 100;
 	public static int days = 30;
 
-	public static String path = "/Users/xiongha/Dropbox/technical-reports/report-1/libsvm-data/";
-	public static String[] datasets = { "web1", "web2", "web3"};
-	public static String[][] datafiles = { { "w1a.txt", "w1b.txt" }, { "w2a.txt", "w2b.txt" }, { "w3a.txt", "w3b.txt" }};
+	public static String path = "C://Users/xiongha/Dropbox/technical-reports/report-1/libsvm-data/";
+	public static String[] datasets = { "web1", "web2", "web3"};//, "adult1", "adult2", "adult3" };
+	public static String[][] datafiles = { { "w1a.txt", "w1b.txt" }, { "w2a.txt", "w2b.txt" }, { "w3a.txt", "w3b.txt" },
+			{ "a1a.txt", "a1b.txt" }, { "a2a.txt", "a2b.txt" }, { "a3a.txt", "a3b.txt" } };
 
 	public static void main(String[] args) {
 		for (int i = 0; i < datasets.length; i++)
@@ -63,18 +67,18 @@ public class LIBSVMBenchmarkCompareDesparse {
 		// double[][] recoveredData = dataRecovery(new NMFRecovery(10), fm, fm,
 		// missingcodes, 0);
 
-		for (int t = 25; t <= 60; t += 15) {
+		for (int t = 20; t <= 150; t += 20) {
 			t_size = t;
 			te_size = 200;
 			try {
-				ps = new PrintStream("/Users/xiongha/Box Sync/CHSN_pattern mining/Jinghe/results-" + dataset
-						+ "-" + t_size + ".txt");
+				ps = new PrintStream("C://Users/xiongha/Desktop/onlineLDA/rayleflow-" + dataset + "-"
+						+ t_size + ".txt");
 			} catch (FileNotFoundException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 
-			for (int r = 0; r < 100; r++) {
+			for (int r = 0; r < 30; r++) {
 				// Estimator.lambda = 0.005 * 0.25;
 
 				BalanceTTSelection s = new BalanceTTSelection(fm, labels, t_size, te_size);
@@ -85,22 +89,79 @@ public class LIBSVMBenchmarkCompareDesparse {
 				long t2 = System.currentTimeMillis();
 				accuracy("LDA", s.getTestingSet(), s.getTestingLabels(), LDA, t1, t2);
 
-				for (double lambda = 0.5; lambda <= 3; lambda += 0.5) {
-					Estimator.lambda = lambda;
-					t1 = System.currentTimeMillis();
-					SDA oLDA = new SDA(s.getTrainingSet(), s.getTrainingLabels(), false);
-					t2 = System.currentTimeMillis();
-					accuracy("SDA-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), oLDA, t1, t2);
+				// for (double lambda = 0.5; lambda <= 3; lambda += 0.5) {
+				Estimator.lambda = 1.0;
+				t1 = System.currentTimeMillis();
+				SDA oLDA = new SDA(s.getTrainingSet(), s.getTrainingLabels(), false);
+				t2 = System.currentTimeMillis();
+				accuracy("SDA-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), oLDA, t1, t2);
+				// }
+
+				double[][] trainData = s.getTrainingSet();
+				int[] trainLabel = s.getTrainingLabels();
+
+				double[][] testData = s.getTestingSet();
+				int[] testLabel = s.getTestingLabels();
+				
+				for(int i=0;i<trainLabel.length;i++)
+					if(trainLabel[i]==0)
+						trainLabel[i] = -1;
+				
+				for(int i=0;i<testLabel.length;i++)
+					if(testLabel[i]==0)
+						testLabel[i] = -1;
+
+				long start, current;
+				
+				start = System.currentTimeMillis();
+				DBSDA dbsda = new DBSDA(trainData, trainLabel, false);
+				current = System.currentTimeMillis();
+				accuracy2("DBSDA", testData, testLabel, dbsda, start, current);
+				
+				for (int k = 0; k < 10; k++) {
+					for (double i = 0.0001; i < 0.1; i *= 10) {
+						start = System.currentTimeMillis();
+						StochasticTruncatedRayleighFlowDBSDA olda = new StochasticTruncatedRayleighFlowDBSDA(trainData,
+								trainLabel, false, k * 30 + 30, i);
+						current = System.currentTimeMillis();
+						accuracy2("StochasticTruncatedRayleighFlowDBSDA-" + i + "-" + (k * 30 + 30), testData, testLabel,
+								olda, start, current);
+					}
 				}
 
-				for (double lambda = 0.5; lambda <= 3; lambda += 0.5) {
-					Estimator.lambda = lambda;
-					t1 = System.currentTimeMillis();
-					DBSDA oLDA = new DBSDA(s.getTrainingSet(), s.getTrainingLabels(), false);
-					t2 = System.currentTimeMillis();
-					accuracy("\\TheName{}-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), oLDA, t1, t2);
+				// for (int i = 0; i < 5; i++) {
+				// start = System.currentTimeMillis();
+				// TruncatedRayleighFlowDBSDA olda = new
+				// TruncatedRayleighFlowDBSDA(trainData, trainLabel, false,
+				// i * 2 + 6);
+				// current = System.currentTimeMillis();
+				// accuracy("TruncatedRayleighFlowDBSDA-" + (i * 2 + 6),
+				// testData, testLabel, olda, start, current);
+				// }
+
+				for (int i = 0; i < 10; i++) {
+					start = System.currentTimeMillis();
+					TruncatedRayleighFlowLDA olda = new TruncatedRayleighFlowLDA(trainData, trainLabel, false,
+							i * 10 + 10);
+					current = System.currentTimeMillis();
+					accuracy2("TruncatedRayleighFlowLDA-" + (i * 30 + 30), testData, testLabel, olda, start, current);
 				}
 
+				start = System.currentTimeMillis();
+				RayleighFlowLDA olda = new RayleighFlowLDA(trainData, trainLabel, false);
+				current = System.currentTimeMillis();
+				accuracy2("RayleighFlowLDA", testData, testLabel, olda, start, current);
+
+				
+				for(int i=0;i<trainLabel.length;i++)
+					if(trainLabel[i]==-1)
+						trainLabel[i] = 0;
+				
+				for(int i=0;i<testLabel.length;i++)
+					if(testLabel[i]==-1)
+						testLabel[i] = 0;
+				
+				
 				t1 = System.currentTimeMillis();
 				SVMClassifier svm = new SVMClassifier(s.getTrainingSet(), s.getTrainingLabels());
 				t2 = System.currentTimeMillis();
@@ -192,6 +253,32 @@ public class LIBSVMBenchmarkCompareDesparse {
 		ps.println(name + "\t" + tp + "\t" + tn + "\t" + fp + "\t" + fn + "\t" + train_time + "\t" + test_time);
 
 	}
+	
+	private static void accuracy2(String name, double[][] data, int[] labels, Classifier<double[]> classifier, long t1,
+			long t2) {
+		// int[] plabels=new int[labels.length];
+		// System.out.println("accuracy statistics");
+		int tp = 0, fp = 0, tn = 0, fn = 0;
+		for (int i = 0; i < labels.length; i++) {
+			int pl = classifier.predict(data[i]);
+			// System.out.println(pl + "\t vs\t" + labels[i]);
+			if (pl == 1 && labels[i] == 1) {
+				tp++;
+			} else if (pl == -1 && labels[i] == -1) {
+				tn++;
+			} else if (pl == 1 && labels[i] == -1) {
+				fp++;
+			} else {
+				fn++;
+			}
+
+		}
+		long train_time = t2 - t1;
+		double test_time = ((double) (System.currentTimeMillis() - t2)) / ((double) labels.length);
+		ps.println(name + "\t" + tp + "\t" + tn + "\t" + fp + "\t" + fn + "\t" + train_time + "\t" + test_time);
+
+	}
+
 
 	private static double[][] dataRecovery(Recovery r, double[][] fm, double[][] fm2,
 			HashMap<Integer, Set<Integer>> missingcodes, int sum_miss_codes) {
