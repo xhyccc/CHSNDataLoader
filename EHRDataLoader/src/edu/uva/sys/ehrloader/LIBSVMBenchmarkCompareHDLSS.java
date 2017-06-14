@@ -10,30 +10,29 @@ import edu.uva.libopt.numeric.*;
 import edu.uva.sys.ehrloader.ml.BalanceTTSelection;
 import edu.uva.sys.ehrloader.recovery.*;
 import xiong.hdstats.Estimator;
-import xiong.hdstats.da.AdaBoostTreeClassifier;
-import xiong.hdstats.da.AdaboostLRClassifier;
-import xiong.hdstats.da.BayesLDA;
 import xiong.hdstats.da.Classifier;
-import xiong.hdstats.da.DTreeClassifier;
-import xiong.hdstats.da.DaehrLDA;
-import xiong.hdstats.da.SDA;
 import xiong.hdstats.da.LDA;
-import xiong.hdstats.da.LRClassifier;
-import xiong.hdstats.da.LiklihoodBayesLDA;
-import xiong.hdstats.da.MCBayesLDA;
-import xiong.hdstats.da.MCRegularizedBayesLDA;
-import xiong.hdstats.da.DBSDA;
-import xiong.hdstats.da.NonlinearSVMClassifier;
-import xiong.hdstats.da.ODaehrLDA;
-import xiong.hdstats.da.OLDA;
-import xiong.hdstats.da.OrgLDA;
-import xiong.hdstats.da.PDLassoLDA;
-import xiong.hdstats.da.RandomForestClassifier;
-import xiong.hdstats.da.RegularizedBayesLDA;
-import xiong.hdstats.da.RegularizedLikelihoodBayesLDA;
-import xiong.hdstats.da.SVMClassifier;
-import xiong.hdstats.da.ShLDA;
-import xiong.hdstats.da.ShrinkageLDA;
+import xiong.hdstats.da.PseudoInverseLDA;
+import xiong.hdstats.da.CovLDA;
+import xiong.hdstats.da.mcmc.BayesLDA;
+import xiong.hdstats.da.mcmc.LiklihoodBayesLDA;
+import xiong.hdstats.da.mcmc.MCBayesLDA;
+import xiong.hdstats.da.mcmc.MCRegularizedBayesLDA;
+import xiong.hdstats.da.mcmc.RegularizedBayesLDA;
+import xiong.hdstats.da.mcmc.RegularizedLikelihoodBayesLDA;
+import xiong.hdstats.da.ml.AdaBoostTreeClassifier;
+import xiong.hdstats.da.ml.AdaboostLRClassifier;
+import xiong.hdstats.da.ml.DTreeClassifier;
+import xiong.hdstats.da.ml.LRClassifier;
+import xiong.hdstats.da.ml.NonlinearSVMClassifier;
+import xiong.hdstats.da.ml.RandomForestClassifier;
+import xiong.hdstats.da.ml.SVMClassifier;
+import xiong.hdstats.da.shruken.DBSDA;
+import xiong.hdstats.da.shruken.DaehrLDA;
+import xiong.hdstats.da.shruken.ODaehrLDA;
+import xiong.hdstats.da.shruken.SDA;
+import xiong.hdstats.da.shruken.ShLDA;
+import xiong.hdstats.da.shruken.ShrinkageLDA;
 
 public class LIBSVMBenchmarkCompareHDLSS {
 
@@ -83,7 +82,7 @@ public class LIBSVMBenchmarkCompareHDLSS {
 
 
 						long t1 = System.currentTimeMillis();
-						OLDA LDA = new OLDA(s.getTrainingSet(), s.getTrainingLabels(), false);
+						PseudoInverseLDA LDA = new PseudoInverseLDA(s.getTrainingSet(), s.getTrainingLabels(), false);
 						long t2 = System.currentTimeMillis();
 						accuracy("LDA", s.getTestingSet(), s.getTestingLabels(), LDA, t1, t2);
 
