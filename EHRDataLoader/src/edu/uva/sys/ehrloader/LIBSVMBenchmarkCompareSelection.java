@@ -15,6 +15,7 @@ import xiong.hdstats.da.Classifier;
 import xiong.hdstats.da.LDA;
 import xiong.hdstats.da.PseudoInverseLDA;
 import xiong.hdstats.da.CovLDA;
+import xiong.hdstats.da.comb.MetricTransfomer;
 import xiong.hdstats.da.comb.OMPDA;
 import xiong.hdstats.da.comb.RayleighFlowLDA;
 import xiong.hdstats.da.comb.StochasticTruncatedRayleighFlowDBSDA;
@@ -41,7 +42,7 @@ import xiong.hdstats.da.shruken.ShLDA;
 import xiong.hdstats.da.shruken.ShrinkageLDA;
 import xiong.hdstats.da.shruken.mDaehrLDA;
 
-public class LIBSVMBenchmarkCompareRayleFlow {
+public class LIBSVMBenchmarkCompareSelection {
 
 	public static PrintStream ps = null;
 	public static int t_size = 400;
@@ -49,8 +50,9 @@ public class LIBSVMBenchmarkCompareRayleFlow {
 	public static int days = 30;
 
 	public static String path = "C://Users/xiongha/Dropbox/technical-reports/report-1/libsvm-data/";
-	public static String[] datasets = { "adult1", "web1", "mushrooms"};
-	public static String[][] datafiles = { { "a1a.txt", "a1b.txt" },{ "w1a.txt", "w1b.txt" }, { "mushrooms.txt" } };
+	public static String[] datasets = { "adult1", "web1", "mushrooms", "madelon" };
+	public static String[][] datafiles = { { "a1a.txt", "a1b.txt" }, { "w1a.txt", "w1b.txt" }, { "mushrooms.txt" },
+			{ "madelon.txt", "madelon2.txt" } };
 
 	public static void main(String[] args) {
 		for (int i = 0; i < datasets.length; i++)
@@ -69,7 +71,8 @@ public class LIBSVMBenchmarkCompareRayleFlow {
 			t_size = t;
 			te_size = 200;
 			try {
-				ps = new PrintStream("C://Users/xiongha/Desktop/classification/accuracy-" + dataset + "-" + t_size*2 + ".txt");
+				ps = new PrintStream(
+						"C://Users/xiongha/Desktop/metric/accuracy-" + dataset + "-" + t_size * 2 + ".txt");
 			} catch (FileNotFoundException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -81,20 +84,6 @@ public class LIBSVMBenchmarkCompareRayleFlow {
 				BalanceTTSelection s = new BalanceTTSelection(fm, labels, t_size, te_size);
 				s.select();
 
-				long t1 = System.currentTimeMillis();
-				PseudoInverseLDA LDA = new PseudoInverseLDA(s.getTrainingSet(), s.getTrainingLabels(), false);
-				long t2 = System.currentTimeMillis();
-				accuracy("LDA", s.getTestingSet(), s.getTestingLabels(), LDA, t1, t2);
-
-				for (double l = 1; l <= 16; l *= 2) {
-					Estimator.lambda = l;
-					t1 = System.currentTimeMillis();
-					SDA oLDA = new SDA(s.getTrainingSet(), s.getTrainingLabels(), false);
-					t2 = System.currentTimeMillis();
-					accuracy("SDA-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), oLDA, t1, t2);
-
-				}
-				
 				double[][] trainData = s.getTrainingSet();
 				int[] trainLabel = s.getTrainingLabels();
 
@@ -109,121 +98,139 @@ public class LIBSVMBenchmarkCompareRayleFlow {
 					if (testLabel[i] == 0)
 						testLabel[i] = -1;
 
-				long start, current;
+				long start, current, t1, t2;
+				try {
+					double[][] ttrain = trainData;
+					double[][] ttest = testData;
+					logFS("original", s, 0, ttrain, ttest);
+				} catch (Exception exp) {
+					exp.printStackTrace();
+				}
 
-				for (int i = 10; i <= 100; i += 30) {
+				for (int i = 10; i <= 50; i += 20) {
 					start = System.currentTimeMillis();
 					OMPDA olda = new OMPDA(trainData, trainLabel, false, i);
 					current = System.currentTimeMillis();
-					accuracy2("OMP-" + (i), testData, testLabel, olda, start, current);
-				}
-				
+					double[] beta = olda.getBeta();
+					double[][] ttrain = MetricTransfomer.getMetricTransformedData(beta, trainData);
+					double[][] ttest = MetricTransfomer.getMetricTransformedData(beta, testData);
 
-				for (double l = 1; l <= 16; l *= 2) {
-					Estimator.lambda = l;
-					for (int i = 10; i <= 100; i += 30) {
-						start = System.currentTimeMillis();
-						TruncatedRayleighFlowDBSDA olda = new TruncatedRayleighFlowDBSDA(trainData, trainLabel, false,
-								i);
-						current = System.currentTimeMillis();
-						accuracy2("TruncatedRayleighFlowDBSDA-"+Estimator.lambda+"-" + i, testData, testLabel, olda, start, current);
+					try {
+						logFS("OMP-" + i, s, i, ttrain, ttest);
+					} catch (Exception exp) {
+						exp.printStackTrace();
 					}
+
+				}
+
+				// for (double l = 1; l <= 16; l *= 2) {
+				Estimator.lambda = 2;
+				for (int i = 10; i <= 50; i += 20) {
+					start = System.currentTimeMillis();
+					TruncatedRayleighFlowDBSDA olda = new TruncatedRayleighFlowDBSDA(trainData, trainLabel, false, i);
+					current = System.currentTimeMillis();
+
+					double[] beta = olda.getBeta();
+					double[][] ttrain = MetricTransfomer.getMetricTransformedData(beta, trainData);
+					double[][] ttest = MetricTransfomer.getMetricTransformedData(beta, testData);
+
+					try {
+						logFS("TruncatedRayleighFlowDBSDA-" + i, s, i, ttrain, ttest);
+					} catch (Exception exp) {
+						exp.printStackTrace();
+					}
+
 				}
 
 				for (int i = 10; i <= 100; i += 30) {
 					start = System.currentTimeMillis();
 					TruncatedRayleighFlowLDA olda = new TruncatedRayleighFlowLDA(trainData, trainLabel, false, i);
 					current = System.currentTimeMillis();
-					accuracy2("TruncatedRayleighFlowLDA-" + i, testData, testLabel, olda, start, current);
+
+					double[] beta = olda.getBeta();
+					double[][] ttrain = MetricTransfomer.getMetricTransformedData(beta, trainData);
+					double[][] ttest = MetricTransfomer.getMetricTransformedData(beta, testData);
+
+					try {
+						logFS("TruncatedRayleighFlowLDA-" + i, s, i, ttrain, ttest);
+					} catch (Exception exp) {
+						exp.printStackTrace();
+					}
 				}
-
-				start = System.currentTimeMillis();
-				RayleighFlowLDA rlda = new RayleighFlowLDA(trainData, trainLabel, false);
-				current = System.currentTimeMillis();
-				accuracy2("RayleighFlowLDA", testData, testLabel, rlda, start, current);
-
-				for (int i = 0; i < trainLabel.length; i++)
-					if (trainLabel[i] == -1)
-						trainLabel[i] = 0;
-
-				for (int i = 0; i < testLabel.length; i++)
-					if (testLabel[i] == -1)
-						testLabel[i] = 0;
-
-				t1 = System.currentTimeMillis();
-				SVMClassifier svm = new SVMClassifier(s.getTrainingSet(), s.getTrainingLabels());
-				t2 = System.currentTimeMillis();
-				accuracy("SVM", s.getTestingSet(), s.getTestingLabels(), svm, t1, t2);
-
-				t1 = System.currentTimeMillis();
-				double[][] train = s.getTrainingSet();
-				double[][] test = s.getTestingSet();
-				mDaehrLDA large = new mDaehrLDA(train, s.getTrainingLabels(), false);
-				PCA pca = new PCA(large.getSampleCovarianceMatrix());
-				double[][] t_train = pca.project(train);
-				double[][] t_test = pca.project(test);
-				LDA = new PseudoInverseLDA(t_train, s.getTrainingLabels(), false);
-				t2 = System.currentTimeMillis();
-				accuracy("Ye-LDA", t_test, s.getTestingLabels(), LDA, t1, t2);
-
-				t1 = System.currentTimeMillis();
-				KNNClassifier knn = new KNNClassifier(s.getTrainingSet(), s.getTrainingLabels(), 1);
-				t2 = System.currentTimeMillis();
-				accuracy("KNN-1", s.getTestingSet(), s.getTestingLabels(), knn, t1, t2);
-
-				t1 = System.currentTimeMillis();
-				knn = new KNNClassifier(s.getTrainingSet(), s.getTrainingLabels(), 1);
-				t2 = System.currentTimeMillis();
-				accuracy("KNN-3", s.getTestingSet(), s.getTestingLabels(), knn, t1, t2);
-				
-				t1 = System.currentTimeMillis();
-				knn = new KNNClassifier(s.getTrainingSet(), s.getTrainingLabels(), 1);
-				t2 = System.currentTimeMillis();
-				accuracy("KNN-5", s.getTestingSet(), s.getTestingLabels(), knn, t1, t2);
-				
-				try {
-					t1 = System.currentTimeMillis();
-					DTreeClassifier dtc = new DTreeClassifier(s.getTrainingSet(), s.getTrainingLabels(), 10);
-					t2 = System.currentTimeMillis();
-					accuracy("DTree-10", s.getTestingSet(), s.getTestingLabels(), dtc, t1, t2);
-
-					t1 = System.currentTimeMillis();
-					dtc = new DTreeClassifier(s.getTrainingSet(), s.getTrainingLabels(), 20);
-					t2 = System.currentTimeMillis();
-					accuracy("DTree-20", s.getTestingSet(), s.getTestingLabels(), dtc, t1, t2);
-				} catch (Exception exp) {
-					exp.printStackTrace();
-				}
-
-				t1 = System.currentTimeMillis();
-				RandomForestClassifier rfc = new RandomForestClassifier(s.getTrainingSet(), s.getTrainingLabels(), 50);
-				t2 = System.currentTimeMillis();
-				accuracy("RFC-50", s.getTestingSet(), s.getTestingLabels(), rfc, t1, t2);
-
-				t1 = System.currentTimeMillis();
-				rfc = new RandomForestClassifier(s.getTrainingSet(), s.getTrainingLabels(), 100);
-				t2 = System.currentTimeMillis();
-				accuracy("RFC-100", s.getTestingSet(), s.getTestingLabels(), rfc, t1, t2);
-
-				t1 = System.currentTimeMillis();
-				NonlinearSVMClassifier nsvm = new NonlinearSVMClassifier(s.getTrainingSet(), s.getTrainingLabels(), 0.1,
-						1);
-				t2 = System.currentTimeMillis();
-				accuracy("NLSVM-0.1", s.getTestingSet(), s.getTestingLabels(), nsvm, t1, t2);
-
-				t1 = System.currentTimeMillis();
-				nsvm = new NonlinearSVMClassifier(s.getTrainingSet(), s.getTrainingLabels(), 1, 1);
-				t2 = System.currentTimeMillis();
-				accuracy("NLSVM-1.0", s.getTestingSet(), s.getTestingLabels(), nsvm, t1, t2);
-
-				t1 = System.currentTimeMillis();
-				nsvm = new NonlinearSVMClassifier(s.getTrainingSet(), s.getTrainingLabels(), 10, 1);
-				t2 = System.currentTimeMillis();
-				accuracy("NLSVM-10", s.getTestingSet(), s.getTestingLabels(), nsvm, t1, t2);
-
 			}
 
 		}
+
+	}
+
+	public static void logFS(String name, BalanceTTSelection s, int i, double[][] ttrain, double[][] ttest) {
+		long t1;
+		long t2;
+
+		for (int ii = 0; ii < s.getTrainingLabels().length; ii++)
+			if (s.getTrainingLabels()[ii] == -1)
+				s.getTrainingLabels()[ii] = 0;
+
+		for (int ii = 0; ii < s.getTestingLabels().length; ii++)
+			if (s.getTestingLabels()[ii] == -1)
+				s.getTestingLabels()[ii] = 0;
+
+		t1 = System.currentTimeMillis();
+		KNNClassifier knn = new KNNClassifier(ttrain, s.getTrainingLabels(), 1);
+		t2 = System.currentTimeMillis();
+		accuracy(name + "-KNN-1-" + i, ttest, s.getTestingLabels(), knn, t1, t2);
+
+		t1 = System.currentTimeMillis();
+		knn = new KNNClassifier(ttrain, s.getTrainingLabels(), 1);
+		t2 = System.currentTimeMillis();
+		accuracy(name + "-KNN-3-" + i, ttest, s.getTestingLabels(), knn, t1, t2);
+
+		t1 = System.currentTimeMillis();
+		knn = new KNNClassifier(ttrain, s.getTrainingLabels(), 1);
+		t2 = System.currentTimeMillis();
+		accuracy(name + "-KNN-5-" + i, ttest, s.getTestingLabels(), knn, t1, t2);
+
+		t1 = System.currentTimeMillis();
+		DTreeClassifier dtc = new DTreeClassifier(ttrain, s.getTrainingLabels(), 10);
+		t2 = System.currentTimeMillis();
+		accuracy(name + "-DTree-10-" + i, ttest, s.getTestingLabels(), dtc, t1, t2);
+
+		t1 = System.currentTimeMillis();
+		dtc = new DTreeClassifier(ttrain, s.getTrainingLabels(), 20);
+		t2 = System.currentTimeMillis();
+		accuracy(name + "-DTree-20-" + i, ttest, s.getTestingLabels(), dtc, t1, t2);
+
+		// t1 = System.currentTimeMillis();
+		// RandomForestClassifier rfc = new RandomForestClassifier(ttrain,
+		// s.getTrainingLabels(), 50);
+		// t2 = System.currentTimeMillis();
+		// accuracy(name + "-RFC-50", ttest, s.getTestingLabels(), rfc, t1, t2);
+		//
+		// t1 = System.currentTimeMillis();
+		// rfc = new RandomForestClassifier(ttrain, s.getTrainingLabels(), 100);
+		// t2 = System.currentTimeMillis();
+		// accuracy(name + "-RFC-100", ttest, s.getTestingLabels(), rfc, t1,
+		// t2);
+		//
+		t1 = System.currentTimeMillis();
+		NonlinearSVMClassifier nsvm = new NonlinearSVMClassifier(ttrain, s.getTrainingLabels(), 0.1, 1);
+		t2 = System.currentTimeMillis();
+		accuracy(name + "-NLSVM-" + i, ttest, s.getTestingLabels(), nsvm, t1, t2);
+
+		// t1 = System.currentTimeMillis();
+		// nsvm = new NonlinearSVMClassifier(ttrain, s.getTrainingLabels(), 1,
+		// 1);
+		// t2 = System.currentTimeMillis();
+		// accuracy(name + "-NLSVM-1.0-" + i, ttest, s.getTestingLabels(), nsvm,
+		// t1, t2);
+
+		for (int ii = 0; ii < s.getTrainingLabels().length; ii++)
+			if (s.getTrainingLabels()[ii] == 0)
+				s.getTrainingLabels()[ii] = -1;
+
+		for (int ii = 0; ii < s.getTestingLabels().length; ii++)
+			if (s.getTestingLabels()[ii] == 0)
+				s.getTestingLabels()[ii] = -1;
 	}
 
 	private static void accuracy(String name, double[][] data, int[] labels, Classifier<double[]> classifier, long t1,
