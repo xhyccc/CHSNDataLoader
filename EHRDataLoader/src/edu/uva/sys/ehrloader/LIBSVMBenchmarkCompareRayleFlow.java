@@ -65,7 +65,7 @@ public class LIBSVMBenchmarkCompareRayleFlow {
 
 		System.out.println("matrix " + fm.length + " x " + fm[0].length);
 
-		for (int t = 5; t <= 25; t += 5) {
+		for (int t = 10; t <= 50; t += 10) {
 			t_size = t;
 			te_size = 200;
 			try {
@@ -75,7 +75,7 @@ public class LIBSVMBenchmarkCompareRayleFlow {
 				e.printStackTrace();
 			}
 
-			for (int r = 0; r < 30; r++) {
+			for (int r = 0; r < 100; r++) {
 				// Estimator.lambda = 0.005 * 0.25;
 
 				BalanceTTSelection s = new BalanceTTSelection(fm, labels, t_size, te_size);
@@ -86,14 +86,14 @@ public class LIBSVMBenchmarkCompareRayleFlow {
 				long t2 = System.currentTimeMillis();
 				accuracy("LDA", s.getTestingSet(), s.getTestingLabels(), LDA, t1, t2);
 
-				for (double l = 1; l <= 16; l *= 2) {
-					Estimator.lambda = l;
-					t1 = System.currentTimeMillis();
-					SDA oLDA = new SDA(s.getTrainingSet(), s.getTrainingLabels(), false);
-					t2 = System.currentTimeMillis();
-					accuracy("SDA-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), oLDA, t1, t2);
-
-				}
+//				for (double l = 1; l <= 16; l *= 2) {
+//					Estimator.lambda = l;
+//					t1 = System.currentTimeMillis();
+//					SDA oLDA = new SDA(s.getTrainingSet(), s.getTrainingLabels(), false);
+//					t2 = System.currentTimeMillis();
+//					accuracy("SDA-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(), oLDA, t1, t2);
+//
+//				}
 				
 				double[][] trainData = s.getTrainingSet();
 				int[] trainLabel = s.getTrainingLabels();
@@ -111,7 +111,7 @@ public class LIBSVMBenchmarkCompareRayleFlow {
 
 				long start, current;
 
-				for (int i = 10; i <= 100; i += 30) {
+				for (int i = 10; i <= 50; i += 20) {
 					start = System.currentTimeMillis();
 					OMPDA olda = new OMPDA(trainData, trainLabel, false, i);
 					current = System.currentTimeMillis();
@@ -121,7 +121,7 @@ public class LIBSVMBenchmarkCompareRayleFlow {
 
 				for (double l = 1; l <= 16; l *= 2) {
 					Estimator.lambda = l;
-					for (int i = 10; i <= 100; i += 30) {
+					for (int i = 10; i <= 50; i += 20) {
 						start = System.currentTimeMillis();
 						TruncatedRayleighFlowDBSDA olda = new TruncatedRayleighFlowDBSDA(trainData, trainLabel, false,
 								i);
@@ -130,17 +130,17 @@ public class LIBSVMBenchmarkCompareRayleFlow {
 					}
 				}
 
-				for (int i = 10; i <= 100; i += 30) {
-					start = System.currentTimeMillis();
-					TruncatedRayleighFlowLDA olda = new TruncatedRayleighFlowLDA(trainData, trainLabel, false, i);
-					current = System.currentTimeMillis();
-					accuracy2("TruncatedRayleighFlowLDA-" + i, testData, testLabel, olda, start, current);
-				}
+//				for (int i = 10; i <= 100; i += 30) {
+//					start = System.currentTimeMillis();
+//					TruncatedRayleighFlowLDA olda = new TruncatedRayleighFlowLDA(trainData, trainLabel, false, i);
+//					current = System.currentTimeMillis();
+//					accuracy2("TruncatedRayleighFlowLDA-" + i, testData, testLabel, olda, start, current);
+//				}
 
-				start = System.currentTimeMillis();
-				RayleighFlowLDA rlda = new RayleighFlowLDA(trainData, trainLabel, false);
-				current = System.currentTimeMillis();
-				accuracy2("RayleighFlowLDA", testData, testLabel, rlda, start, current);
+//				start = System.currentTimeMillis();
+//				RayleighFlowLDA rlda = new RayleighFlowLDA(trainData, trainLabel, false);
+//				current = System.currentTimeMillis();
+//				accuracy2("RayleighFlowLDA", testData, testLabel, rlda, start, current);
 
 				for (int i = 0; i < trainLabel.length; i++)
 					if (trainLabel[i] == -1)
@@ -216,10 +216,10 @@ public class LIBSVMBenchmarkCompareRayleFlow {
 				t2 = System.currentTimeMillis();
 				accuracy("NLSVM-1.0", s.getTestingSet(), s.getTestingLabels(), nsvm, t1, t2);
 
-				t1 = System.currentTimeMillis();
-				nsvm = new NonlinearSVMClassifier(s.getTrainingSet(), s.getTrainingLabels(), 10, 1);
-				t2 = System.currentTimeMillis();
-				accuracy("NLSVM-10", s.getTestingSet(), s.getTestingLabels(), nsvm, t1, t2);
+//				t1 = System.currentTimeMillis();
+//				nsvm = new NonlinearSVMClassifier(s.getTrainingSet(), s.getTrainingLabels(), 10, 1);
+//				t2 = System.currentTimeMillis();
+//				accuracy("NLSVM-10", s.getTestingSet(), s.getTestingLabels(), nsvm, t1, t2);
 
 			}
 

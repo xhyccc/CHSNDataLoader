@@ -67,7 +67,7 @@ public class LIBSVMBenchmarkCompareSelection {
 
 		System.out.println("matrix " + fm.length + " x " + fm[0].length);
 
-		for (int t = 5; t <= 25; t += 5) {
+		for (int t = 10; t <= 50; t += 10) {
 			t_size = t;
 			te_size = 200;
 			try {
@@ -78,7 +78,7 @@ public class LIBSVMBenchmarkCompareSelection {
 				e.printStackTrace();
 			}
 
-			for (int r = 0; r < 30; r++) {
+			for (int r = 0; r < 100; r++) {
 				// Estimator.lambda = 0.005 * 0.25;
 
 				BalanceTTSelection s = new BalanceTTSelection(fm, labels, t_size, te_size);
@@ -142,21 +142,21 @@ public class LIBSVMBenchmarkCompareSelection {
 
 				}
 
-				for (int i = 10; i <= 100; i += 30) {
-					start = System.currentTimeMillis();
-					TruncatedRayleighFlowLDA olda = new TruncatedRayleighFlowLDA(trainData, trainLabel, false, i);
-					current = System.currentTimeMillis();
-
-					double[] beta = olda.getBeta();
-					double[][] ttrain = MetricTransfomer.getMetricTransformedData(beta, trainData);
-					double[][] ttest = MetricTransfomer.getMetricTransformedData(beta, testData);
-
-					try {
-						logFS("TruncatedRayleighFlowLDA-" + i, s, i, ttrain, ttest);
-					} catch (Exception exp) {
-						exp.printStackTrace();
-					}
-				}
+//				for (int i = 10; i <= 100; i += 30) {
+//					start = System.currentTimeMillis();
+//					TruncatedRayleighFlowLDA olda = new TruncatedRayleighFlowLDA(trainData, trainLabel, false, i);
+//					current = System.currentTimeMillis();
+//
+//					double[] beta = olda.getBeta();
+//					double[][] ttrain = MetricTransfomer.getMetricTransformedData(beta, trainData);
+//					double[][] ttest = MetricTransfomer.getMetricTransformedData(beta, testData);
+//
+//					try {
+//						logFS("TruncatedRayleighFlowLDA-" + i, s, i, ttrain, ttest);
+//					} catch (Exception exp) {
+//						exp.printStackTrace();
+//					}
+//				}
 			}
 
 		}
