@@ -9,7 +9,6 @@ import java.util.Set;
 import edu.uva.libopt.numeric.*;
 import edu.uva.sys.ehrloader.ml.BalanceTTSelection;
 import edu.uva.sys.ehrloader.recovery.*;
-import xiong.hdstats.Estimator;
 import xiong.hdstats.da.Classifier;
 import xiong.hdstats.da.LDA;
 import xiong.hdstats.da.PseudoInverseLDA;
@@ -29,6 +28,7 @@ import xiong.hdstats.da.shruken.ODaehrLDA;
 import xiong.hdstats.da.shruken.SDA;
 import xiong.hdstats.da.shruken.ShLDA;
 import xiong.hdstats.da.shruken.ShrinkageLDA;
+import xiong.hdstats.gaussian.CovarianceEstimator;
 
 public class ICDMainEnsCompare {
 

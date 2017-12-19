@@ -12,8 +12,7 @@ import edu.uva.sys.ehrloader.ml.BalanceTTSelection;
 import edu.uva.sys.ehrloader.recovery.*;
 import smile.math.matrix.Matrix;
 import smile.projection.PCA;
-import smile.stat.distribution.GLassoMultivariateGaussianDistribution;
-import xiong.hdstats.Estimator;
+import smile.stat.distribution.SpikedMultivariateGaussianDistribution;
 import xiong.hdstats.da.Classifier;
 import xiong.hdstats.da.LDA;
 import xiong.hdstats.da.PseudoInverseLDA;
@@ -38,6 +37,7 @@ import xiong.hdstats.da.shruken.SDA;
 import xiong.hdstats.da.shruken.ShLDA;
 import xiong.hdstats.da.shruken.ShrinkageLDA;
 import xiong.hdstats.da.shruken.mDaehrLDA;
+import xiong.hdstats.gaussian.CovarianceEstimator;
 
 public class PsuedoRandomOnlineLDA {
 
@@ -125,9 +125,9 @@ public class PsuedoRandomOnlineLDA {
 		}
 
 		double[][] theta_s = new Matrix(cov).inverse();
-		GLassoMultivariateGaussianDistribution posD = new GLassoMultivariateGaussianDistribution(meanPositive, cov);
+		SpikedMultivariateGaussianDistribution posD = new SpikedMultivariateGaussianDistribution(meanPositive, cov);
 
-		GLassoMultivariateGaussianDistribution negD = new GLassoMultivariateGaussianDistribution(meanNegative, cov);
+		SpikedMultivariateGaussianDistribution negD = new SpikedMultivariateGaussianDistribution(meanNegative, cov);
 
 		for (int r = 0; r < 20; r++) {
 			double[][] testData = new double[testSize][p];

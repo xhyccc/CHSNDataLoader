@@ -8,27 +8,27 @@ import java.util.concurrent.Executors;
 
 import edu.uva.libopt.numeric.*;
 import smile.math.matrix.Matrix;
-import smile.stat.distribution.GLassoMultivariateGaussianDistribution;
-import xiong.hdstats.gaussian.OnlineGraphEstimator;
-import xiong.hdstats.gaussian.OnlineSparseGraphEstimator;
+import smile.stat.distribution.SpikedMultivariateGaussianDistribution;
+import xiong.hdstats.gaussian.online.OnlineGraphEstimator;
 
 public class PsuedoRandomOnline {
-	public static ExecutorService ctp=Executors.newFixedThreadPool(4);
+	public static ExecutorService ctp = Executors.newFixedThreadPool(4);
 
 	public static void main(String[] args) {
 		int[] pa = { 200, };
 		double[] is = { 1.0, 2.0 };
-		double[] od = { 0.01, 0.02, 0.03,};
+		double[] od = { 0.01, 0.02, 0.03, };
 		for (final int p : pa) {
 			for (double o : od) {
 				for (double i : is) {
-					final int init_size = (int)(i*p);
-					final int original_density = (int)(o*p*p);
+					final int init_size = (int) (i * p);
+					final int original_density = (int) (o * p * p);
 					try {
-						final PrintStream pps=new PrintStream("C:/Users/xiongha/Desktop/sgraph/results-"+init_size+"-"+original_density+"-"+p+".txt");
-						Runnable thread=new Runnable(){
-							public void run(){
-								_main(init_size,p,original_density,pps);
+						final PrintStream pps = new PrintStream("C:/Users/xiongha/Desktop/sgraph/results-" + init_size
+								+ "-" + original_density + "-" + p + ".txt");
+						Runnable thread = new Runnable() {
+							public void run() {
+								_main(init_size, p, original_density, pps);
 							}
 						};
 						ctp.execute(thread);
@@ -56,10 +56,10 @@ public class PsuedoRandomOnline {
 		}
 		double[] mean = new double[p];
 		double[][] theta_s = new Matrix(cov).inverse();
-		OnlineSparseGraphEstimator.HT(origin_density, theta_s);
+
 		double[][] sparseICov = new Matrix(theta_s).inverse();
 		double density = Utils.getLxNorm(theta_s, Utils.L0);
-		GLassoMultivariateGaussianDistribution gaussian = new GLassoMultivariateGaussianDistribution(mean, sparseICov);
+		SpikedMultivariateGaussianDistribution gaussian = new SpikedMultivariateGaussianDistribution(mean, sparseICov);
 		double[][] init = new double[init_size][p];
 		for (int i = 0; i < init.length; i++) {
 			double[] randv = gaussian.rand();
@@ -67,9 +67,9 @@ public class PsuedoRandomOnline {
 				init[i][j] = randv[j];
 			}
 		}
-		HashMap<Integer, OnlineSparseGraphEstimator> algorithms = new HashMap<Integer, OnlineSparseGraphEstimator>();
+		HashMap<Integer, OnlineGraphEstimator> algorithms = new HashMap<Integer, OnlineGraphEstimator>();
 		for (int ed : est_density) {
-			OnlineSparseGraphEstimator alg = new OnlineSparseGraphEstimator(ed);
+			OnlineGraphEstimator alg = new OnlineGraphEstimator();
 			alg.init(init);
 			algorithms.put(ed, alg);
 		}
@@ -92,7 +92,7 @@ public class PsuedoRandomOnline {
 		// }
 
 		for (int ed : est_density) {
-			OnlineSparseGraphEstimator osg = algorithms.get(ed);
+			OnlineGraphEstimator osg = algorithms.get(ed);
 			double overlaps = overlap(osg.graph, theta_s);
 			double sprecision = overlaps / osg.getL0Norm();
 			double srecall = overlaps / density;
@@ -112,7 +112,7 @@ public class PsuedoRandomOnline {
 			double[] randov = gaussian.rand();
 
 			for (int ed : est_density) {
-				OnlineSparseGraphEstimator osg = algorithms.get(ed);
+				OnlineGraphEstimator osg = algorithms.get(ed);
 				osg.update(index, randov);
 				double overlaps = overlap(osg.graph, theta_s);
 				double sprecision = overlaps / osg.getL0Norm();

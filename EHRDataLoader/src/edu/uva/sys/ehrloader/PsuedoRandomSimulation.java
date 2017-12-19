@@ -11,8 +11,7 @@ import edu.uva.sys.ehrloader.ml.BalanceTTSelection;
 import edu.uva.sys.ehrloader.recovery.*;
 import smile.math.matrix.Matrix;
 import smile.projection.PCA;
-import smile.stat.distribution.GLassoMultivariateGaussianDistribution;
-import xiong.hdstats.Estimator;
+import smile.stat.distribution.SpikedMultivariateGaussianDistribution;
 import xiong.hdstats.da.Classifier;
 import xiong.hdstats.da.LDA;
 import xiong.hdstats.da.PseudoInverseLDA;
@@ -36,6 +35,7 @@ import xiong.hdstats.da.shruken.SDA;
 import xiong.hdstats.da.shruken.ShLDA;
 import xiong.hdstats.da.shruken.ShrinkageLDA;
 import xiong.hdstats.da.shruken.mDaehrLDA;
+import xiong.hdstats.gaussian.CovarianceEstimator;
 
 public class PsuedoRandomSimulation {
 
@@ -74,9 +74,9 @@ public class PsuedoRandomSimulation {
 		}
 
 		double[][] theta_s = new Matrix(cov).inverse();
-		GLassoMultivariateGaussianDistribution posD = new GLassoMultivariateGaussianDistribution(meanPositive, cov);
+		SpikedMultivariateGaussianDistribution posD = new SpikedMultivariateGaussianDistribution(meanPositive, cov);
 
-		GLassoMultivariateGaussianDistribution negD = new GLassoMultivariateGaussianDistribution(meanPositive, cov);
+		SpikedMultivariateGaussianDistribution negD = new SpikedMultivariateGaussianDistribution(meanPositive, cov);
 		double[][] testData = new double[500][200];
 		int[] testLabel = new int[500];
 		for (int i = 0; i < 500; i++) {
@@ -118,15 +118,15 @@ public class PsuedoRandomSimulation {
 
 				}
 				for (double lambda = 0.5; lambda <= 100; lambda *= 2) {
-					Estimator.lambda = lambda;
+					CovarianceEstimator.lambda = lambda;
 					SDA oLDA = new SDA(trainData, trainLabel, false);
-					accuracy("SDA-" + Estimator.lambda, testData, testLabel, oLDA, 0, 0);
+					accuracy("SDA-" + CovarianceEstimator.lambda, testData, testLabel, oLDA, 0, 0);
 				}
 
 				for (double lambda = 0.5; lambda <= 100; lambda *= 2) {
-					Estimator.lambda = lambda;
+					CovarianceEstimator.lambda = lambda;
 					DBSDA oLDA = new DBSDA(trainData, trainLabel, false);
-					accuracy("\\TheName{}-" + Estimator.lambda, testData, testLabel, oLDA, 0, 0);
+					accuracy("\\TheName{}-" + CovarianceEstimator.lambda, testData, testLabel, oLDA, 0, 0);
 				}
 
 				PseudoInverseLDA LDA = new PseudoInverseLDA(trainData, trainLabel, false);

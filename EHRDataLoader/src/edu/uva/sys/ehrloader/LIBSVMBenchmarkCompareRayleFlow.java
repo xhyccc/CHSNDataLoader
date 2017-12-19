@@ -10,7 +10,6 @@ import edu.uva.libopt.numeric.*;
 import edu.uva.sys.ehrloader.ml.BalanceTTSelection;
 import edu.uva.sys.ehrloader.recovery.*;
 import smile.projection.PCA;
-import xiong.hdstats.Estimator;
 import xiong.hdstats.da.Classifier;
 import xiong.hdstats.da.LDA;
 import xiong.hdstats.da.PseudoInverseLDA;
@@ -40,6 +39,7 @@ import xiong.hdstats.da.shruken.SDA;
 import xiong.hdstats.da.shruken.ShLDA;
 import xiong.hdstats.da.shruken.ShrinkageLDA;
 import xiong.hdstats.da.shruken.mDaehrLDA;
+import xiong.hdstats.gaussian.CovarianceEstimator;
 
 public class LIBSVMBenchmarkCompareRayleFlow {
 
@@ -120,13 +120,13 @@ public class LIBSVMBenchmarkCompareRayleFlow {
 				
 
 				for (double l = 1; l <= 16; l *= 2) {
-					Estimator.lambda = l;
+					CovarianceEstimator.lambda = l;
 					for (int i = 10; i <= 50; i += 20) {
 						start = System.currentTimeMillis();
 						TruncatedRayleighFlowDBSDA olda = new TruncatedRayleighFlowDBSDA(trainData, trainLabel, false,
 								i);
 						current = System.currentTimeMillis();
-						accuracy2("TruncatedRayleighFlowDBSDA-"+Estimator.lambda+"-" + i, testData, testLabel, olda, start, current);
+						accuracy2("TruncatedRayleighFlowDBSDA-"+CovarianceEstimator.lambda+"-" + i, testData, testLabel, olda, start, current);
 					}
 				}
 

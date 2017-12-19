@@ -10,7 +10,6 @@ import edu.uva.libopt.numeric.*;
 import edu.uva.sys.ehrloader.ml.BalanceTTSelection;
 import edu.uva.sys.ehrloader.recovery.*;
 import smile.projection.PCA;
-import xiong.hdstats.Estimator;
 import xiong.hdstats.da.Classifier;
 import xiong.hdstats.da.LDA;
 import xiong.hdstats.da.PseudoInverseLDA;
@@ -35,6 +34,7 @@ import xiong.hdstats.da.shruken.SDA;
 import xiong.hdstats.da.shruken.ShLDA;
 import xiong.hdstats.da.shruken.ShrinkageLDA;
 import xiong.hdstats.da.shruken.mDaehrLDA;
+import xiong.hdstats.gaussian.CovarianceEstimator;
 
 public class LIBSVMBenchmarkCompare {
 
@@ -119,23 +119,23 @@ public class LIBSVMBenchmarkCompare {
 //						}
 
 						for (double lambda = 100; lambda >= 1; lambda *= 0.1) {
-							Estimator.lambda = lambda;
+							CovarianceEstimator.lambda = lambda;
 							t1 = System.currentTimeMillis();
 							MCRegularizedBayesLDA oLDA = new MCRegularizedBayesLDA(s.getTrainingSet(),
 									s.getTrainingLabels(), 200, 0);
 							t2 = System.currentTimeMillis();
 							// oLDA.setNumPredictors(5000);
 							oLDA.setNumPredictors(200);
-							accuracy("MC_BayesRDA-200-10-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(),
+							accuracy("MC_BayesRDA-200-10-" + CovarianceEstimator.lambda, s.getTestingSet(), s.getTestingLabels(),
 									oLDA, t1, t2);
 							oLDA.setNumPredictors(150);
-							accuracy("MC_BayesRDA-150-10-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(),
+							accuracy("MC_BayesRDA-150-10-" + CovarianceEstimator.lambda, s.getTestingSet(), s.getTestingLabels(),
 									oLDA, t1, t2);
 							oLDA.setNumPredictors(100);
-							accuracy("MC_BayesRDA-100-10-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(),
+							accuracy("MC_BayesRDA-100-10-" + CovarianceEstimator.lambda, s.getTestingSet(), s.getTestingLabels(),
 									oLDA, t1, t2);
 							oLDA.setNumPredictors(50);
-							accuracy("MC_BayesRDA-50-10-" + Estimator.lambda, s.getTestingSet(), s.getTestingLabels(),
+							accuracy("MC_BayesRDA-50-10-" + CovarianceEstimator.lambda, s.getTestingSet(), s.getTestingLabels(),
 									oLDA, t1, t2);
 						}
 //						for (double lambda = 100; lambda >= 1; lambda *= 0.1) {
