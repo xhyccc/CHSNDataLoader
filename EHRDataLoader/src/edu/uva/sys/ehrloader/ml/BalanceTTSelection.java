@@ -38,6 +38,7 @@ public class BalanceTTSelection implements TTSelection {
 		List<Integer> nTest = new ArrayList<Integer>();
 
 		for (int i = 0; i < this._labels.length; i++) {
+		//	System.out.println(this._labels[i]);
 			if (this._labels[i] == 1) {
 				pTrain.add(i);
 			} else {

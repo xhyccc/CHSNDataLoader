@@ -34,7 +34,7 @@ import xiong.hdstats.da.shruken.ODaehrLDA;
 import xiong.hdstats.da.shruken.SDA;
 import xiong.hdstats.da.shruken.ShLDA;
 import xiong.hdstats.da.shruken.ShrinkageLDA;
-import xiong.hdstats.da.shruken.mDaehrLDA;
+import xiong.hdstats.da.shruken.InvalidLDA;
 import xiong.hdstats.gaussian.CovarianceEstimator;
 
 public class PsuedoRandomSimulation {

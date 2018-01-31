@@ -34,7 +34,7 @@ import xiong.hdstats.da.shruken.ODaehrLDA;
 import xiong.hdstats.da.shruken.SDA;
 import xiong.hdstats.da.shruken.ShLDA;
 import xiong.hdstats.da.shruken.ShrinkageLDA;
-import xiong.hdstats.da.shruken.mDaehrLDA;
+import xiong.hdstats.da.shruken.InvalidLDA;
 import xiong.hdstats.gaussian.CovarianceEstimator;
 
 public class ICDMainYeCompare {
@@ -112,7 +112,7 @@ public class ICDMainYeCompare {
 						long t1 = System.currentTimeMillis();
 						double[][] train = s.getTrainingSet();
 						double[][] test = s.getTestingSet();
-						mDaehrLDA large = new mDaehrLDA(train, s.getTrainingLabels(), false);
+						InvalidLDA large = new InvalidLDA(train, s.getTrainingLabels(), false);
 						PCA pca =new PCA(large.getSampleCovarianceMatrix());
 						double[][] t_train=pca.project(train);
 						double[][] t_test=pca.project(test);

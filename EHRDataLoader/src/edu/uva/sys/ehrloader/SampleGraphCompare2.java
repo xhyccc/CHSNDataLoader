@@ -25,7 +25,7 @@ import xiong.hdstats.da.shruken.DaehrLDA;
 import xiong.hdstats.da.shruken.ODaehrLDA;
 import xiong.hdstats.da.shruken.ShLDA;
 import xiong.hdstats.da.shruken.ShrinkageLDA;
-import xiong.hdstats.da.shruken.mDaehrLDA;
+import xiong.hdstats.da.shruken.InvalidLDA;
 import xiong.hdstats.gaussian.CovarianceEstimator;
 import xiong.hdstats.graph.DGLassoGraph;
 import xiong.hdstats.graph.GLassoGraph;

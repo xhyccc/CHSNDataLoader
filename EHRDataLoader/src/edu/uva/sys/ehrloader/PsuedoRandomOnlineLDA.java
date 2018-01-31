@@ -12,6 +12,7 @@ import edu.uva.sys.ehrloader.ml.BalanceTTSelection;
 import edu.uva.sys.ehrloader.recovery.*;
 import smile.math.matrix.Matrix;
 import smile.projection.PCA;
+import smile.stat.distribution.MultivariateGaussianDistribution;
 import smile.stat.distribution.SpikedMultivariateGaussianDistribution;
 import xiong.hdstats.da.Classifier;
 import xiong.hdstats.da.LDA;
@@ -36,7 +37,8 @@ import xiong.hdstats.da.shruken.ODaehrLDA;
 import xiong.hdstats.da.shruken.SDA;
 import xiong.hdstats.da.shruken.ShLDA;
 import xiong.hdstats.da.shruken.ShrinkageLDA;
-import xiong.hdstats.da.shruken.mDaehrLDA;
+import xiong.hdstats.da.shruken.SpikedDA;
+import xiong.hdstats.da.shruken.InvalidLDA;
 import xiong.hdstats.gaussian.CovarianceEstimator;
 
 public class PsuedoRandomOnlineLDA {
@@ -45,67 +47,30 @@ public class PsuedoRandomOnlineLDA {
 
 	public static void main(String[] args) throws FileNotFoundException {
 
-		_main(200, 10, 200, 500, 5000, 5);
-		_main(200, 10, 200, 500, 5000, 4);
-		_main(200, 10, 200, 500, 5000, 3);
-		_main(200, 10, 200, 500, 5000, 2);
-		_main(200, 10, 200, 500, 5000, 1);
+	//	_main(200, 10, 20, 1000, 5000, 4);
+	//	_main(200, 10, 20, 1000, 5000, 3);
+	//	_main(200, 10, 20, 1000, 5000, 2);
+	//	_main(200, 10, 20, 1000, 5000, 1);
 
-		_main(200, 10, 400, 500, 5000, 5);
-		_main(200, 10, 400, 500, 5000, 4);
-		_main(200, 10, 400, 500, 5000, 3);
-		_main(200, 10, 400, 500, 5000, 2);
-		_main(200, 10, 400, 500, 5000, 1);
+	//	_main(200, 10, 20, 500, 2000, 5);
+	//	_main(200, 10, 40, 500, 2000, 5);
+	//	_main(200, 10, 80, 500, 2000, 5);
+	//	_main(200, 10, 160, 500, 2000, 5);
+	//	_main(200, 10, 320, 500, 2000, 5);
 		
-		_main(200, 10, 800, 500, 5000, 5);
-		_main(200, 10, 800, 500, 5000, 4);
-		_main(200, 10, 800, 500, 5000, 3);
-		_main(200, 10, 800, 500, 5000, 2);
-		_main(200, 10, 800, 500, 5000, 1);
-
-		_main(800, 40, 200, 500, 5000, 5);
-		_main(800, 40, 200, 500, 5000, 4);
-		_main(800, 40, 200, 500, 5000, 3);
-		_main(800, 40, 200, 500, 5000, 2);
-		_main(800, 40, 200, 500, 5000, 1);
-
-		_main(800, 40, 400, 500, 5000, 5);
-		_main(800, 40, 400, 500, 5000, 4);
-		_main(800, 40, 400, 500, 5000, 3);
-		_main(800, 40, 400, 500, 5000, 2);
-		_main(800, 40, 400, 500, 5000, 1);
-		
-		_main(800, 40, 800, 500, 5000, 5);
-		_main(800, 40, 800, 500, 5000, 4);
-		_main(800, 40, 800, 500, 5000, 3);
-		_main(800, 40, 800, 500, 5000, 2);
-		_main(800, 40, 800, 500, 5000, 1);
-		
-		_main(400, 20, 200, 500, 5000, 5);
-		_main(400, 20, 200, 500, 5000, 4);
-		_main(400, 20, 200, 500, 5000, 3);
-		_main(400, 20, 200, 500, 5000, 2);
-		_main(400, 20, 200, 500, 5000, 1);
-
-		_main(400, 20, 400, 500, 5000, 5);
-		_main(400, 20, 400, 500, 5000, 4);
-		_main(400, 20, 400, 500, 5000, 3);
-		_main(400, 20, 400, 500, 5000, 2);
-		_main(400, 20, 400, 500, 5000, 1);
-		
-		_main(400, 20, 800, 500, 5000, 5);
-		_main(400, 20, 800, 500, 5000, 4);
-		_main(400, 20, 800, 500, 5000, 3);
-		_main(400, 20, 800, 500, 5000, 2);
-		_main(400, 20, 800, 500, 5000, 1);
-
+	//	_main(50, 10, 20, 500, 2000, 5);
+	//	_main(100, 10, 20, 500, 2000, 5);
+	//	_main(400, 10, 20, 500, 2000, 5);
+	//	_main(800, 10, 20, 500, 2000, 5);
+		_main(1600, 10, 20, 500, 2000, 5);
+	//	_main(3200, 160, 20, 500, 2000, 5);
 
 	}
 
 	public static void _main(int p, int nz, int initTrainSize, int testSize, int newSize, int rate)
 			throws FileNotFoundException {
 
-		ps = new PrintStream("C:/Users/xiongha/Desktop/OnlineLDA/accuracy-" + p + "-" + nz + "-" + initTrainSize + "-"
+		ps = new PrintStream("C:/Users/xiongha/Desktop/ograph/accuracy-" + p + "-" + nz + "-" + initTrainSize + "-"
 				+ ((double) rate / 1.0) + ".txt");
 		double[][] cov = new double[p][p];
 
@@ -124,38 +89,45 @@ public class PsuedoRandomOnlineLDA {
 			meanNegative[i] = 0.0;
 		}
 
-		double[][] theta_s = new Matrix(cov).inverse();
+		// double[][] theta_s = new Matrix(cov).inverse();
 		SpikedMultivariateGaussianDistribution posD = new SpikedMultivariateGaussianDistribution(meanPositive, cov);
 
 		SpikedMultivariateGaussianDistribution negD = new SpikedMultivariateGaussianDistribution(meanNegative, cov);
 
-		for (int r = 0; r < 20; r++) {
+		for (int r = 0; r < 10; r++) {
 			double[][] testData = new double[testSize][p];
 			int[] testLabel = new int[testSize];
+			int[] testLabelNN = new int[testSize];
+
 			for (int i = 0; i < testSize; i++) {
 				double[] tdat;
 				if (i % 10 < rate) {
 					tdat = posD.rand();
 					testLabel[i] = 1;
+					testLabelNN[i] = 1;
 				} else {
 					tdat = negD.rand();
 					testLabel[i] = -1;
+					testLabelNN[i] = 0;
 				}
 				for (int j = 0; j < cov.length; j++)
 					testData[i][j] = tdat[j];
 			}
 
-			double[][] trainData = new double[initTrainSize][p];
-			int[] trainLabel = new int[initTrainSize];
-			for (int i = 0; i < initTrainSize; i++) {
+			double[][] trainData = new double[initTrainSize + newSize][p];
+			int[] trainLabel = new int[initTrainSize + newSize];
+			int[] trainLabelNN = new int[initTrainSize + newSize];
+			for (int i = 0; i < initTrainSize + newSize; i++) {
 				double[] tdat;
 				{
 					if (i % 10 < rate) {
 						tdat = posD.rand();
 						trainLabel[i] = 1;
+						trainLabelNN[i] = 1;
 					} else {
 						tdat = negD.rand();
 						trainLabel[i] = -1;
+						trainLabelNN[i] = 0;
 					}
 					for (int j = 0; j < cov.length; j++)
 						trainData[i][j] = tdat[j];
@@ -163,29 +135,70 @@ public class PsuedoRandomOnlineLDA {
 
 			}
 			OnlineLDA olda = new OnlineLDA();
-			olda.init(trainData, trainLabel);
+			olda.init(getTopKSamples(trainData, initTrainSize), getTopKLabels(trainLabel, initTrainSize),
+					initTrainSize / 3);
 			// System.out.println(Utils.getErrorInf(olda.means[0], new
 			// double[1][p]));
 			accuracy("Oline-init", 0, testData, testLabel, olda, 0, 0);
-			for (int ns = 0; ns < newSize; ns++) {
-				double[] tdat;
-				int tlabel;
-				if (ns % 10 < rate) {
-					tdat = posD.rand();
-					tlabel = 1;
-				} else {
-					tdat = negD.rand();
-					tlabel = -1;
+
+			for (int ns = 1; ns <= newSize; ns++) {
+				long start = System.currentTimeMillis();
+				System.out.println("online LDA updating...."+ns);
+				olda.update(trainData[initTrainSize + ns-1], trainLabel[initTrainSize + ns-1]);
+				System.out.println("online LDA finished updating");
+				long end = System.currentTimeMillis();
+				if (ns > 1 && ns % 500 == 0) {
+					accuracy("OlineLDA", ns, testData, testLabel, olda, start, end);
+					
+					double[][] tdata = getTopKSamples(trainData, initTrainSize + ns);
+					int[] tlabel = getTopKLabels(trainLabel, initTrainSize + ns);
+					int[] tlabelNN = getTopKLabels(trainLabelNN, initTrainSize + ns);
+					for (int i = 2; i <= 8; i *= 2) {
+						long t1 = System.currentTimeMillis();
+						SpikedDA oLDA = new SpikedDA(tdata, tlabel, false, i);
+						long t2 = System.currentTimeMillis();
+						accuracy("OfflineLDA-" + i, ns, testData, testLabel, oLDA, t1, t2);
+					}
+					long t1 = System.currentTimeMillis();
+					SVMClassifier svm = new SVMClassifier(tdata, tlabel);
+					long t2 = System.currentTimeMillis();
+					accuracy("OfflineSVM", ns, testData, testLabel,  svm, t1, t2);
+
+					t1 = System.currentTimeMillis();
+					RandomForestClassifier rfc = new RandomForestClassifier(tdata, tlabelNN, 40);
+					t2 = System.currentTimeMillis();
+					accuracyNN("OfflineRFC-40", ns, testData, testLabelNN, rfc, t1, t2);
+
+					t1 = System.currentTimeMillis();
+					rfc = new RandomForestClassifier(tdata, tlabelNN, 10);
+					t2 = System.currentTimeMillis();
+					accuracyNN("OfflineRFC-10", ns, testData, testLabelNN, rfc, t1, t2);
+
+					t1 = System.currentTimeMillis();
+					rfc = new RandomForestClassifier(tdata, tlabelNN, 20);
+					t2 = System.currentTimeMillis();
+					accuracyNN("OfflineRFC-20", ns, testData, testLabelNN, rfc, t1, t2);
+					
+					t1 = System.currentTimeMillis();
+					NonlinearSVMClassifier nsvm = new NonlinearSVMClassifier(tdata, tlabelNN, 15, 1);
+					t2 = System.currentTimeMillis();
+					accuracyNN("OfflineKernel-15.0", ns, testData, testLabelNN, nsvm, t1, t2);
+
+					t1 = System.currentTimeMillis();
+					nsvm = new NonlinearSVMClassifier(tdata, tlabelNN, 5, 1);
+					t2 = System.currentTimeMillis();
+					accuracyNN("OfflineKernel-5.0", ns, testData, testLabelNN, nsvm, t1, t2);
+					
+					t1 = System.currentTimeMillis();
+					nsvm = new NonlinearSVMClassifier(tdata, tlabelNN, 10.0, 1);
+					t2 = System.currentTimeMillis();
+					accuracyNN("OfflineKernel-10.0", ns, testData, testLabelNN, nsvm, t1, t2);
+
+					
 				}
-				olda.update(tdat, tlabel);
-
-				// System.out.println(olda.delta);
-				// System.out.println(Utils.getErrorL2(olda.means[1],new
-				// double[1][p]));
-
-				accuracy("Oline-update", ns + 1, testData, testLabel, olda, 0, 0);
 
 			}
+
 		}
 	}
 
@@ -213,6 +226,51 @@ public class PsuedoRandomOnlineLDA {
 		ps.println(
 				name + "\t" + s + "\t" + tp + "\t" + tn + "\t" + fp + "\t" + fn + "\t" + train_time + "\t" + test_time);
 
+	}
+	
+	
+	private static void accuracyNN(String name, int s, double[][] data, int[] labels, Classifier<double[]> classifier,
+			long t1, long t2) {
+		// int[] plabels=new int[labels.length];
+		// System.out.println("accuracy statistics");
+		int tp = 0, fp = 0, tn = 0, fn = 0;
+		for (int i = 0; i < labels.length; i++) {
+			int pl = classifier.predict(data[i]);
+			// System.out.println(pl + "\t vs\t" + labels[i]);
+			if (pl == 1 && labels[i] == 1) {
+				tp++;
+			} else if (pl == 0 && labels[i] == 0) {
+				tn++;
+			} else if (pl == 1 && labels[i] == 0) {
+				fp++;
+			} else {
+				fn++;
+			}
+
+		}
+		long train_time = t2 - t1;
+		double test_time = ((double) (System.currentTimeMillis() - t2)) / ((double) labels.length);
+		ps.println(
+				name + "\t" + s + "\t" + tp + "\t" + tn + "\t" + fp + "\t" + fn + "\t" + train_time + "\t" + test_time);
+
+	}
+
+	public static double[][] getTopKSamples(double[][] dat, int k) {
+		double[][] gsamples = new double[k][dat[0].length];
+		for (int i = 0; i < k; i++) {
+			for (int j = 0; j < dat[i].length; j++) {
+				gsamples[i][j] = dat[i][j];
+			}
+		}
+		return gsamples;
+	}
+
+	public static int[] getTopKLabels(int[] lab, int k) {
+		int[] gsamples = new int[k];
+		for (int i = 0; i < k; i++) {
+			gsamples[i] = lab[i];
+		}
+		return gsamples;
 	}
 
 	private static double[][] dataRecovery(Recovery r, double[][] fm, double[][] fm2,

@@ -13,7 +13,7 @@ import smile.math.matrix.Matrix;
 import smile.stat.distribution.SpikedMultivariateGaussianDistribution;
 import xiong.hdstats.gaussian.GLassoEstimator;
 import xiong.hdstats.gaussian.SampleCovarianceEstimator;
-import xiong.hdstats.gaussian.SpikedEstimator;
+import xiong.hdstats.gaussian.SpikedUpperEstimator;
 import xiong.hdstats.gaussian.online.GLassoIntialOnlineGraphEstimator;
 import xiong.hdstats.gaussian.online.OnlineGraphEstimator;
 import xiong.hdstats.gaussian.online.SampleInitialOnlineGraphEstimator;
@@ -61,8 +61,8 @@ public class PsuedoRandomOnlineGraph {
 		double[] mean = new double[p];
 		double[][] theta_s = new Matrix(cov).inverse();
 
-		double[][] ocov = TruncatedSVD.truncate(cov, s);
-		double[][] icov = TruncatedSVD.truncatedInverse(cov, s);
+		double[][] ocov = TruncatedSVD.eigenTruncate(cov, s);
+		double[][] icov = TruncatedSVD.eigenTruncatedInverse(cov, s);
 
 		SpikedMultivariateGaussianDistribution gaussian = new SpikedMultivariateGaussianDistribution(mean, ocov);
 		double[][] init = new double[init_size][p];
@@ -161,25 +161,25 @@ public class PsuedoRandomOnlineGraph {
 						+ Utils.getErrorInf(icov, SampleGraph) + "\t" + (end - start));
 
 				start = System.nanoTime();
-				double[][] SpikedGraph10 = new SpikedEstimator(10).inverseCovariance(dat);
+				double[][] SpikedGraph10 = new SpikedUpperEstimator(10).inverseCovariance(dat);
 				end = System.nanoTime();
 				ps.println("Spiked-off-10"+"\t"+t+" \t updating\t" +  Utils.getErrorL2(icov, SpikedGraph10) + "\t"
 						+ Utils.getErrorInf(icov, SpikedGraph10) + "\t" + (end - start));
 
 				start = System.nanoTime();
-				double[][] SpikedGraph20 = new SpikedEstimator(20).inverseCovariance(dat);
+				double[][] SpikedGraph20 = new SpikedUpperEstimator(20).inverseCovariance(dat);
 				end = System.nanoTime();
 				ps.println("Spiked-off-20"+"\t"+t+" \t updating\t" +  Utils.getErrorL2(icov, SpikedGraph20) + "\t"
 						+ Utils.getErrorInf(icov, SpikedGraph20) + "\t" + (end - start));
 
 				start = System.nanoTime();
-				double[][] SpikedGraph50 = new SpikedEstimator(50).inverseCovariance(dat);
+				double[][] SpikedGraph50 = new SpikedUpperEstimator(50).inverseCovariance(dat);
 				end = System.nanoTime();
 				ps.println("Spiked-off-50"+"\t"+t+" \t updating\t" +  Utils.getErrorL2(icov, SpikedGraph50) + "\t"
 						+ Utils.getErrorInf(icov, SpikedGraph50) + "\t" + (end - start));
 
 				start = System.nanoTime();
-				double[][] SpikedGraph100 = new SpikedEstimator(100).inverseCovariance(dat);
+				double[][] SpikedGraph100 = new SpikedUpperEstimator(100).inverseCovariance(dat);
 				end = System.nanoTime();
 				ps.println("Spiked-off-100"+"\t"+t+" \t updating\t" +  Utils.getErrorL2(icov, SpikedGraph100) + "\t"
 						+ Utils.getErrorInf(icov, SpikedGraph100) + "\t" + (end - start));
