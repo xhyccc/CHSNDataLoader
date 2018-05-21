@@ -75,7 +75,7 @@ public class PsuedoRandomOnlineGraph {
 				allsamples[i][j] = randv[j];
 			}
 		}
-		SampleInitialOnlineGraphEstimator ogel = new SampleInitialOnlineGraphEstimator();
+		SampleInitialOnlineGraphEstimator ogel = new SampleInitialOnlineGraphEstimator(10);
 		SpikedInitialOnlineGraphEstimator osgel10 = new SpikedInitialOnlineGraphEstimator(10);
 		SpikedInitialOnlineGraphEstimator osgel20 = new SpikedInitialOnlineGraphEstimator(20);
 		SpikedInitialOnlineGraphEstimator osgel50 = new SpikedInitialOnlineGraphEstimator(50);
